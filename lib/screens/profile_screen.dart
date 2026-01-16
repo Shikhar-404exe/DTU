@@ -1,4 +1,4 @@
-// lib/screens/profile_screen.dart
+
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -131,7 +131,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (!mounted) return;
 
-      // Navigate to login screen
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
@@ -151,7 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildClassDropdown(bool isDark) {
     return DropdownButtonFormField<String>(
-      value: _selectedClassId,
+      initialValue: _selectedClassId,
       style: TextStyle(
         color: isDark ? AppColors.textDarkMode : Colors.black87,
       ),
@@ -338,7 +337,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        // Privacy & Data Settings
+
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(

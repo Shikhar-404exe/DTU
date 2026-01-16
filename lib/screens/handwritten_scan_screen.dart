@@ -1,4 +1,4 @@
-// lib/screens/handwritten_scan_screen.dart
+
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
@@ -19,7 +19,7 @@ import '../services/qr_share_helper.dart';
 import '../services/p2p_file_share_service.dart';
 import 'note_share_qr.dart';
 
-enum ScanFilter { original, magic, highContrast, lighten, darken }
+enum ScanFilter { original, enhance, highContrast, lighten }
 
 class HandwrittenScanScreen extends StatefulWidget {
   const HandwrittenScanScreen({super.key});
@@ -33,7 +33,6 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
   Future<void>? _initializeControllerFuture;
   bool _cameraReady = false;
 
-  // Store both file path and bytes for reliable preview
   final List<_ScannedPage> _pages = [];
   bool _savingPdf = false;
   bool _isCapturing = false;
@@ -42,7 +41,7 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
   final TextEditingController _titleController =
       TextEditingController(text: "Scanned Notes");
 
-  ScanFilter _filter = ScanFilter.magic;
+  ScanFilter _filter = ScanFilter.original;
   String _userClassId = 'class_10';
 
   @override
@@ -87,7 +86,7 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
 
       _cameraController = CameraController(
         cams.first,
-        ResolutionPreset.high, // Higher resolution for better scans
+        ResolutionPreset.high,
         enableAudio: false,
         imageFormatGroup: ImageFormatGroup.jpeg,
       );
@@ -121,12 +120,10 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
     } catch (_) {}
   }
 
-  /// Samsung A12 safe image processing with reliable bytes output
   Future<_ScannedPage?> _processImage(File input) async {
     try {
       final originalBytes = await input.readAsBytes();
 
-      // Step 1: Force JPEG conversion using flutter_image_compress (handles Samsung YUV/HEIC)
       Uint8List jpegBytes;
       try {
         jpegBytes = await FlutterImageCompress.compressWithList(
@@ -137,11 +134,10 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
           minHeight: 1600,
         );
       } catch (e) {
-        // Fallback to original bytes if compression fails
+
         jpegBytes = Uint8List.fromList(originalBytes);
       }
 
-      // Step 2: Decode and apply filter using image package
       img.Image? decoded;
       try {
         decoded = img.decodeJpg(jpegBytes);
@@ -149,7 +145,7 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
         try {
           decoded = img.decodeImage(jpegBytes);
         } catch (_) {
-          // If decoding fails, just save original
+
           final docs = await getApplicationDocumentsDirectory();
           final outFile = File(p.join(
               docs.path, "scan_${DateTime.now().millisecondsSinceEpoch}.jpg"));
@@ -168,72 +164,41 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
 
       img.Image work = decoded;
 
-      // Resize if too large
       if (work.width > 1500) {
         work = img.copyResize(work, width: 1500);
       }
 
-      // Apply CamScanner-like filters using correct image package API
       switch (_filter) {
         case ScanFilter.original:
-          // Minimal enhancement - slight contrast boost
-          work = img.contrast(work, contrast: 105);
+
           break;
 
-        case ScanFilter.magic:
-          // CamScanner Magic Color - Professional document enhancement
-          // Step 1: Auto white balance and normalize
-          work = img.normalize(work, min: 0, max: 255);
+        case ScanFilter.enhance:
 
-          // Step 2: Adaptive histogram equalization for text clarity
-          work = img.contrast(work, contrast: 140);
-
-          // Step 3: Sharpen text edges
-          work = img.adjustColor(work, contrast: 1.15);
-
-          // Step 4: Brighten slightly and reduce yellow tint
-          work = img.colorOffset(work, red: 12, green: 12, blue: 15);
-
-          // Step 5: Enhance contrast in midtones for handwritten text
-          work = img.adjustColor(work, saturation: 0.80, brightness: 1.05);
-
-          // Step 6: Remove noise and smoothen background
-          work = img.gaussianBlur(work, radius: 1);
-
-          // Step 7: Final contrast boost for crisp text
-          work = img.contrast(work, contrast: 110);
+          work = img.contrast(work, contrast: 115);
+          work = img.colorOffset(work, red: 8, green: 8, blue: 10);
           break;
 
         case ScanFilter.highContrast:
-          // High contrast B&W style for faded text
+
           work = img.grayscale(work);
-          work = img.contrast(work, contrast: 160);
-          work = img.colorOffset(work, red: 15, green: 15, blue: 15);
+          work = img.contrast(work, contrast: 150);
           break;
 
         case ScanFilter.lighten:
-          // Brighten dark scans
-          work = img.colorOffset(work, red: 40, green: 40, blue: 40);
-          work = img.contrast(work, contrast: 115);
-          break;
 
-        case ScanFilter.darken:
-          // Darken overexposed scans
-          work = img.colorOffset(work, red: -30, green: -30, blue: -30);
-          work = img.contrast(work, contrast: 125);
+          work = img.colorOffset(work, red: 30, green: 30, blue: 30);
+          work = img.contrast(work, contrast: 110);
           break;
       }
 
-      // Encode final image
       final processedBytes =
           Uint8List.fromList(img.encodeJpg(work, quality: 88));
 
-      // Create thumbnail for preview (smaller size for faster loading)
       final thumbnail = img.copyResize(work, width: 200);
       final thumbnailBytes =
           Uint8List.fromList(img.encodeJpg(thumbnail, quality: 75));
 
-      // Save to file
       final docs = await getApplicationDocumentsDirectory();
       final outFile = File(p.join(
           docs.path, "scan_${DateTime.now().millisecondsSinceEpoch}.jpg"));
@@ -242,7 +207,7 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
       return _ScannedPage(file: outFile, thumbnailBytes: thumbnailBytes);
     } catch (e) {
       debugPrint("Image processing error: $e");
-      // Fallback: just copy the original file
+
       try {
         final docs = await getApplicationDocumentsDirectory();
         final outFile = File(p.join(
@@ -292,9 +257,8 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
   Future<void> _saveAsPdf() async {
     if (_pages.isEmpty || _savingPdf) return;
 
-    // Show mandatory save dialog first
     final result = await _showMandatorySaveDialog();
-    if (result == null) return; // User cancelled
+    if (result == null) return;
 
     setState(() => _savingPdf = true);
 
@@ -302,10 +266,9 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
       final pdf = pw.Document(compress: true);
 
       for (final page in _pages) {
-        // Compress image before adding to PDF
+
         final originalBytes = await page.file.readAsBytes();
 
-        // Compress to reduce PDF size (quality 85 for good balance)
         final compressedBytes = await FlutterImageCompress.compressWithList(
           originalBytes,
           format: CompressFormat.jpeg,
@@ -314,7 +277,6 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
           minHeight: 1600,
         );
 
-        // Create PDF page with compressed image
         pdf.addPage(
           pw.Page(
             pageFormat: PdfPageFormat.a4,
@@ -333,25 +295,21 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final outFile = File(p.join(docs.path, "scan_pdf_$timestamp.pdf"));
 
-      // Save PDF with compression
       final pdfBytes = await pdf.save();
       await outFile.writeAsBytes(pdfBytes, flush: true);
 
       final fileSize = await outFile.length();
       debugPrint('📝 PDF saved: ${_formatFileSize(fileSize)}');
 
-      // Verify file was created
       if (!await outFile.exists()) {
         throw "Failed to save PDF file";
       }
 
-      // Save as organized note
       final prefs = await SharedPreferences.getInstance();
       final notesJson = prefs.getString('organized_notes') ?? '[]';
       final notesList =
           (jsonDecode(notesJson) as List).cast<Map<String, dynamic>>();
 
-      // Use class from dialog result, fallback to user's profile class
       final newNote = OrganizedNote(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         title: result['name']!,
@@ -367,7 +325,6 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
       notesList.add(newNote.toJson());
       await prefs.setString('organized_notes', jsonEncode(notesList));
 
-      // Also save to old format for backward compatibility
       final notes = await StorageService.loadNotes();
       notes.add({
         "title": result['name']!,
@@ -380,7 +337,6 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
 
       if (!mounted) return;
 
-      // Show success dialog with options
       _showSaveSuccessDialog(outFile, result['name']!);
     } catch (e) {
       if (mounted) {
@@ -439,7 +395,7 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
           ElevatedButton.icon(
             onPressed: () async {
               Navigator.pop(ctx);
-              // Show loading
+
               showDialog(
                 context: context,
                 barrierDismissible: false,
@@ -449,7 +405,7 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
               );
 
               try {
-                // Prepare QR payload with aggressive compression/automatic P2P
+
                 final payload = await QRShareHelper.prepareForSharing(
                   title: title,
                   content: '',
@@ -458,23 +414,20 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
                 );
 
                 if (!mounted) return;
-                Navigator.pop(context); // Close loading
+                Navigator.pop(context);
 
-                // Show mode-specific feedback
                 if (payload.type == QRDataType.p2p) {
-                  // Automatic P2P mode for large files
+
                   debugPrint('📡 Large file detected, using P2P mode');
 
                   final hostInfo =
                       await P2PFileShareService.startHosting(pdfFile);
 
-                  // Update payload with P2P session info
                   payload.data['sessionId'] = hostInfo.sessionId;
                   payload.data['ip'] = hostInfo.ip;
                   payload.data['port'] = hostInfo.port;
                   payload.data['networkName'] = hostInfo.networkName;
 
-                  // Show seamless P2P mode indicator
                   if (hostInfo.networkName != null) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -517,7 +470,7 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
                     );
                   }
                 } else {
-                  // Successfully compressed for inline QR
+
                   debugPrint('✓ File compressed for inline QR');
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -528,7 +481,6 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
                   );
                 }
 
-                // Navigate to QR share screen
                 if (!mounted) return;
                 Navigator.push(
                   context,
@@ -539,13 +491,13 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
                     ),
                   ),
                 ).then((_) {
-                  // Stop P2P hosting when done
+
                   P2PFileShareService.stopHosting();
                   if (mounted) Navigator.pop(context, true);
                 });
               } catch (e) {
                 if (!mounted) return;
-                Navigator.pop(context); // Close loading
+                Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('QR generation failed: $e')),
                 );
@@ -621,7 +573,7 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: selectedClassId,
+                  initialValue: selectedClassId,
                   isExpanded: true,
                   decoration: InputDecoration(
                     labelText: 'Class',
@@ -644,7 +596,7 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: selectedSubjectId,
+                  initialValue: selectedSubjectId,
                   isExpanded: true,
                   decoration: InputDecoration(
                     labelText: 'Subject',
@@ -761,7 +713,7 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withAlpha(51), // ~0.2 opacity
+                      color: Colors.black.withAlpha(51),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -804,11 +756,10 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
       );
     }
 
-    // 3:4 aspect ratio for A4 paper scanning (wider view)
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Camera with 3:4 aspect ratio (A4 friendly)
+
         Center(
           child: AspectRatio(
             aspectRatio: 3 / 4,
@@ -816,7 +767,6 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
           ),
         ),
 
-        // Flash toggle
         Positioned(
           top: 10,
           right: 10,
@@ -825,7 +775,7 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.black.withAlpha(128), // ~0.5 opacity
+                color: Colors.black.withAlpha(128),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -837,7 +787,6 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
           ),
         ),
 
-        // Hint text
         Positioned(
           bottom: 10,
           left: 0,
@@ -846,7 +795,7 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.black.withAlpha(153), // ~0.6 opacity
+                color: Colors.black.withAlpha(153),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Text(
@@ -864,14 +813,12 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
     switch (f) {
       case ScanFilter.original:
         return "Original";
-      case ScanFilter.magic:
-        return "Magic";
+      case ScanFilter.enhance:
+        return "Enhance";
       case ScanFilter.highContrast:
         return "B&W";
       case ScanFilter.lighten:
         return "Lighten";
-      case ScanFilter.darken:
-        return "Darken";
     }
   }
 
@@ -879,14 +826,12 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
     switch (f) {
       case ScanFilter.original:
         return Icons.image;
-      case ScanFilter.magic:
+      case ScanFilter.enhance:
         return Icons.auto_fix_high;
       case ScanFilter.highContrast:
         return Icons.contrast;
       case ScanFilter.lighten:
         return Icons.wb_sunny;
-      case ScanFilter.darken:
-        return Icons.nightlight;
     }
   }
 
@@ -910,19 +855,19 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
                 decoration: BoxDecoration(
                   color: selected
                       ? AppColors.salmon
-                      : Colors.white.withAlpha(204), // ~0.8 opacity
+                      : Colors.white.withAlpha(204),
                   borderRadius: BorderRadius.circular(25),
                   border: Border.all(
                     color: selected
                         ? AppColors.salmon
-                        : Colors.grey.withAlpha(77), // ~0.3 opacity
+                        : Colors.grey.withAlpha(77),
                     width: 1.5,
                   ),
                   boxShadow: selected
                       ? [
                           BoxShadow(
                             color:
-                                AppColors.salmon.withAlpha(102), // ~0.4 opacity
+                                AppColors.salmon.withAlpha(102),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -994,10 +939,10 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                               color: AppColors.salmon
-                                  .withAlpha(128)), // ~0.5 opacity
+                                  .withAlpha(128)),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withAlpha(26), // ~0.1 opacity
+                              color: Colors.black.withAlpha(26),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -1077,7 +1022,7 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.salmon.withAlpha(51), // ~0.2 opacity
+                      color: AppColors.salmon.withAlpha(51),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
@@ -1095,7 +1040,7 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
         ),
         body: Column(
           children: [
-            // PDF Title input
+
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
               child: TextField(
@@ -1106,7 +1051,7 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
                   labelStyle: TextStyle(color: Colors.grey[600]),
                   prefixIcon: const Icon(Icons.title, color: AppColors.salmon),
                   filled: true,
-                  fillColor: Colors.white.withAlpha(230), // ~0.9 opacity
+                  fillColor: Colors.white.withAlpha(230),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -1117,7 +1062,6 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
               ),
             ),
 
-            // Camera preview
             Expanded(
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -1125,7 +1069,7 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withAlpha(51), // ~0.2 opacity
+                      color: Colors.black.withAlpha(51),
                       blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
@@ -1140,25 +1084,22 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
 
             const SizedBox(height: 8),
 
-            // Filter toolbar
             _filterToolbar(),
 
-            // Page thumbnails
             _buildPageThumbnails(),
 
-            // Bottom action bar
             Container(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: Row(
                 children: [
-                  // Undo button
+
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(230), // ~0.9 opacity
+                      color: Colors.white.withAlpha(230),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withAlpha(26), // ~0.1 opacity
+                          color: Colors.black.withAlpha(26),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
@@ -1177,7 +1118,6 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
 
                   const Spacer(),
 
-                  // Capture button
                   GestureDetector(
                     onTap: _isCapturing ? null : _capturePage,
                     child: Container(
@@ -1193,7 +1133,7 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
                         boxShadow: [
                           BoxShadow(
                             color:
-                                AppColors.salmon.withAlpha(102), // ~0.4 opacity
+                                AppColors.salmon.withAlpha(102),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -1229,7 +1169,6 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
 
                   const Spacer(),
 
-                  // Save button
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     child: ElevatedButton.icon(
@@ -1270,7 +1209,6 @@ class _HandwrittenScanScreenState extends State<HandwrittenScanScreen> {
   }
 }
 
-/// Helper class to store scanned page with both file and thumbnail bytes
 class _ScannedPage {
   final File file;
   final Uint8List thumbnailBytes;

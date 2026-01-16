@@ -1,5 +1,6 @@
-// filepath: lib/screens/teacher/class_management_screen.dart
-/// Class Management - Create and organize class sections
+
+
+library;
 
 import 'package:flutter/material.dart';
 import '../../main.dart';

@@ -1,6 +1,6 @@
-// filepath: lib/services/teacher_data_service.dart
-/// Teacher Data Persistence Service
-/// Manages compact JSON storage in SharedPreferences with size monitoring
+
+
+library;
 
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -14,11 +14,9 @@ class TeacherDataService {
   static const String _timetableKey = 'teacher_timetable';
   static const String _attendanceKey = 'teacher_attendance';
 
-  // Size limits (in bytes)
-  static const int _maxTotalSize = 900 * 1024; // 900KB (safe under 1MB limit)
-  static const int _warningSize = 700 * 1024; // 700KB warning threshold
+  static const int _maxTotalSize = 900 * 1024;
+  static const int _warningSize = 700 * 1024;
 
-  /// Get all students
   static Future<List<StudentRecord>> getStudents() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -31,13 +29,11 @@ class TeacherDataService {
     }
   }
 
-  /// Save all students
   static Future<bool> saveStudents(List<StudentRecord> students) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonStr = jsonEncode(students.map((s) => s.toJson()).toList());
 
-      // Check size before saving
       if (jsonStr.length > _maxTotalSize) {
         debugPrint('⚠️ Data size exceeds limit: ${jsonStr.length} bytes');
         return false;
@@ -52,7 +48,6 @@ class TeacherDataService {
     }
   }
 
-  /// Get all class sections
   static Future<List<ClassSection>> getClasses() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -65,7 +60,6 @@ class TeacherDataService {
     }
   }
 
-  /// Save all class sections
   static Future<bool> saveClasses(List<ClassSection> classes) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -79,7 +73,6 @@ class TeacherDataService {
     }
   }
 
-  /// Get all lesson plans
   static Future<List<LessonPlan>> getLessonPlans() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -92,7 +85,6 @@ class TeacherDataService {
     }
   }
 
-  /// Save all lesson plans
   static Future<bool> saveLessonPlans(List<LessonPlan> lessons) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -106,7 +98,6 @@ class TeacherDataService {
     }
   }
 
-  /// Get timetable entries
   static Future<List<TimetableEntry>> getTimetable() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -119,7 +110,6 @@ class TeacherDataService {
     }
   }
 
-  /// Save timetable entries
   static Future<bool> saveTimetable(List<TimetableEntry> entries) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -133,7 +123,6 @@ class TeacherDataService {
     }
   }
 
-  /// Get attendance records
   static Future<List<AttendanceRecord>> getAttendance() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -146,7 +135,6 @@ class TeacherDataService {
     }
   }
 
-  /// Save attendance records
   static Future<bool> saveAttendance(List<AttendanceRecord> records) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -160,7 +148,6 @@ class TeacherDataService {
     }
   }
 
-  /// Mark attendance for a specific date and class
   static Future<bool> markAttendance({
     required String date,
     required String classId,
@@ -192,7 +179,6 @@ class TeacherDataService {
     }
   }
 
-  /// Check total data size and log warnings
   static Future<void> _checkTotalSize() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -224,7 +210,6 @@ class TeacherDataService {
     }
   }
 
-  /// Clear all teacher data (use with caution!)
   static Future<void> clearAllData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -239,7 +224,6 @@ class TeacherDataService {
     }
   }
 
-  /// Get data size estimate
   static Future<Map<String, int>> getDataSizes() async {
     try {
       final prefs = await SharedPreferences.getInstance();

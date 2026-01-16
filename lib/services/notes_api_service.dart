@@ -1,21 +1,17 @@
-import 'gemini_service.dart';
+import 'openrouter_service.dart';
 
-/// AI Provider enum for selecting which AI to use
-enum AiProvider { gemini, auto }
+enum AiProvider { openrouter, auto }
 
 class NotesApiService {
-  /// Generate notes using Gemini AI (Firebase integration)
-  /// No local backend needed - all AI processing via Firebase/Gemini
+
   static Future<Map<String, dynamic>> generateNote(Map<String, dynamic> payload,
       {AiProvider provider = AiProvider.auto}) async {
-    // Always use Gemini AI - it's integrated with Firebase
-    return await generateNoteWithGemini(payload);
+    return await generateNoteWithOpenRouter(payload);
   }
 
-  /// Generate notes using only Gemini AI
-  static Future<Map<String, dynamic>> generateNoteWithGemini(
+  static Future<Map<String, dynamic>> generateNoteWithOpenRouter(
       Map<String, dynamic> payload) async {
-    final result = await GeminiService.generateNotes(
+    final result = await OpenRouterService.generateNotes(
       subject: payload['subject']?.toString() ?? '',
       topic: payload['topic']?.toString() ?? '',
       board: payload['board']?.toString(),
@@ -28,25 +24,23 @@ class NotesApiService {
     if (result.success && result.content != null) {
       return {
         'note': result.content,
-        'source': 'gemini',
+        'source': 'openrouter',
         'success': true,
       };
     }
 
-    throw Exception(result.error ?? 'Failed to generate notes with Gemini');
+    throw Exception(result.error ?? 'Failed to generate notes with OpenRouter');
   }
 
-  /// Get list of available AI providers
   static List<AiProvider> getAvailableProviders() {
     final providers = <AiProvider>[];
 
-    if (GeminiService.isConfigured) {
-      providers.add(AiProvider.gemini);
+    if (OpenRouterService.isConfigured) {
+      providers.add(AiProvider.openrouter);
     }
 
     return providers;
   }
 
-  /// Check if any AI provider is available
-  static bool get hasAiProvider => GeminiService.isConfigured;
+  static bool get hasAiProvider => OpenRouterService.isConfigured;
 }

@@ -5,7 +5,6 @@ class Note {
   final String content;
   final DateTime createdAt;
 
-  // Quiz metadata for offline question generation
   final NoteQuizMetadata? quizMetadata;
 
   Note({
@@ -39,15 +38,14 @@ class Note {
       );
 }
 
-/// Quiz metadata for offline question generation
 class NoteQuizMetadata {
-  final List<String> keyPoints; // Main concepts from notes
-  final List<String> keywords; // Important terms
+  final List<String> keyPoints;
+  final List<String> keywords;
   final List<QuizQuestionTemplate>
-      questionTemplates; // Pre-generated question templates
-  final String difficulty; // easy, medium, hard
-  final String? board; // CBSE, State Board, etc.
-  final String? classLevel; // Class 10, 12, etc.
+      questionTemplates;
+  final String difficulty;
+  final String? board;
+  final String? classLevel;
 
   NoteQuizMetadata({
     required this.keyPoints,
@@ -81,13 +79,12 @@ class NoteQuizMetadata {
       );
 }
 
-/// Question template for offline quiz generation
 class QuizQuestionTemplate {
   final String question;
-  final List<String> options; // For MCQ (4 options)
+  final List<String> options;
   final String correctAnswer;
   final String explanation;
-  final String type; // mcq, true_false, short_answer, fill_blank
+  final String type;
 
   QuizQuestionTemplate({
     required this.question,

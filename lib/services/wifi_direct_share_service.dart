@@ -1,18 +1,16 @@
-/// WiFi Direct / Hotspot sharing service for high-speed note transfer
-/// Complements Bluetooth with faster transfer speeds for larger files
+
+
 library;
 
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 
 import '../models/note.dart';
 
-/// WiFi Direct sharing state
 enum WiFiShareState {
   idle,
   requestingPermissions,
@@ -27,7 +25,6 @@ enum WiFiShareState {
   error,
 }
 
-/// WiFi hotspot configuration
 class HotspotConfig {
   final String ssid;
   final String password;
@@ -44,8 +41,6 @@ class HotspotConfig {
   String get connectionUrl => 'http://$ipAddress:$port';
 }
 
-/// WiFi Direct sharing service - High-speed P2P transfer
-/// Uses device as WiFi hotspot for faster transfers than Bluetooth
 class WiFiDirectShareService {
   final _stateController = StreamController<WiFiShareState>.broadcast();
   final _progressController = StreamController<double>.broadcast();
@@ -56,7 +51,6 @@ class WiFiDirectShareService {
   HttpServer? _server;
   HotspotConfig? _hotspotConfig;
 
-  // Streams
   Stream<WiFiShareState> get stateStream => _stateController.stream;
   Stream<double> get progressStream => _progressController.stream;
   Stream<String> get errorStream => _errorController.stream;
@@ -65,12 +59,11 @@ class WiFiDirectShareService {
   WiFiShareState get currentState => _currentState;
   HotspotConfig? get hotspotConfig => _hotspotConfig;
 
-  /// Initialize WiFi Direct service
   Future<bool> initialize() async {
     _updateState(WiFiShareState.requestingPermissions);
 
     try {
-      // Request WiFi and Location permissions
+
       final hasPermissions = await _requestPermissions();
       if (!hasPermissions) {
         _updateState(WiFiShareState.permissionsDenied);
@@ -88,7 +81,6 @@ class WiFiDirectShareService {
     }
   }
 
-  /// Request necessary permissions
   Future<bool> _requestPermissions() async {
     try {
       if (Platform.isAndroid) {
@@ -99,15 +91,13 @@ class WiFiDirectShareService {
 
         return statuses.values.every((status) => status.isGranted);
       }
-      return true; // iOS doesn't need these permissions
+      return true;
     } catch (e) {
       debugPrint('❌ Permission error: $e');
       return false;
     }
   }
 
-  /// Start as sender (Teacher creates hotspot)
-  /// Creates HTTP server and broadcasts connection info
   Future<bool> startAsSender() async {
     if (_currentState != WiFiShareState.idle) {
       return false;
@@ -116,17 +106,14 @@ class WiFiDirectShareService {
     _updateState(WiFiShareState.creatingHotspot);
 
     try {
-      // Get device IP address
+
       final networkInfo = NetworkInfo();
       String? ipAddress = await networkInfo.getWifiIP();
 
-      // If no WiFi IP, use loopback
-      ipAddress ??= '192.168.43.1'; // Common hotspot IP
+      ipAddress ??= '192.168.43.1';
 
-      // Start HTTP server
       _server = await HttpServer.bind(InternetAddress.anyIPv4, 8888);
 
-      // Create hotspot config
       _hotspotConfig = HotspotConfig(
         ssid:
             'Vidyarthi-Share-${DateTime.now().millisecondsSinceEpoch % 10000}',
@@ -140,7 +127,6 @@ class WiFiDirectShareService {
       debugPrint('   IP: ${_hotspotConfig!.ipAddress}');
       debugPrint('   URL: ${_hotspotConfig!.connectionUrl}');
 
-      // Listen for incoming connections
       _server!.listen(_handleRequest);
 
       _updateState(WiFiShareState.hotspotActive);
@@ -153,17 +139,16 @@ class WiFiDirectShareService {
     }
   }
 
-  /// Handle incoming HTTP requests
   void _handleRequest(HttpRequest request) async {
     try {
       if (request.method == 'GET' && request.uri.path == '/') {
-        // Health check
+
         request.response
           ..statusCode = HttpStatus.ok
           ..write('Vidyarthi Share Server Active')
           ..close();
       } else if (request.method == 'POST' && request.uri.path == '/receive') {
-        // Receive note from sender (not used in sender mode)
+
         request.response
           ..statusCode = HttpStatus.ok
           ..write('OK')
@@ -179,8 +164,6 @@ class WiFiDirectShareService {
     }
   }
 
-  /// Send note via WiFi Direct (Teacher sends to Students)
-  /// Students must be connected to teacher's hotspot
   Future<bool> sendNote(Note note, String recipientIp) async {
     if (_currentState != WiFiShareState.hotspotActive) {
       _errorController.add('Hotspot not active');
@@ -190,7 +173,7 @@ class WiFiDirectShareService {
     _updateState(WiFiShareState.transferring);
 
     try {
-      // Prepare note data
+
       final noteData = {
         'type': 'note',
         'data': note.toJson(),
@@ -199,7 +182,6 @@ class WiFiDirectShareService {
 
       final jsonString = jsonEncode(noteData);
 
-      // Send via HTTP POST
       final client = HttpClient();
       final request =
           await client.postUrl(Uri.parse('http://$recipientIp:8889/receive'));
@@ -223,8 +205,6 @@ class WiFiDirectShareService {
     }
   }
 
-  /// Broadcast note to all connected devices
-  /// Sends to common subnet (192.168.43.x for hotspot)
   Future<int> broadcastNote(Note note) async {
     if (_currentState != WiFiShareState.hotspotActive) {
       _errorController.add('Hotspot not active');
@@ -235,7 +215,7 @@ class WiFiDirectShareService {
     int successCount = 0;
 
     try {
-      // Prepare note data
+
       final noteData = {
         'type': 'note',
         'data': note.toJson(),
@@ -248,12 +228,11 @@ class WiFiDirectShareService {
       debugPrint('📤 Broadcasting note: ${note.topic}');
       debugPrint('   Size: ${bytes.length} bytes');
 
-      // Broadcast to common hotspot subnet (192.168.43.2 - 192.168.43.255)
       final baseIp = '192.168.43';
       final futures = <Future<bool>>[];
 
       for (int i = 2; i <= 20; i++) {
-        // Try first 20 IPs
+
         final ip = '$baseIp.$i';
         futures.add(_sendToDevice(ip, jsonString));
       }
@@ -272,7 +251,6 @@ class WiFiDirectShareService {
     }
   }
 
-  /// Send note to specific device
   Future<bool> _sendToDevice(String ip, String data) async {
     try {
       final client = HttpClient();
@@ -292,12 +270,11 @@ class WiFiDirectShareService {
       }
       return false;
     } catch (e) {
-      // Silent fail for unavailable IPs
+
       return false;
     }
   }
 
-  /// Start as receiver (Student connects to teacher's hotspot and receives)
   Future<bool> startAsReceiver() async {
     if (_currentState != WiFiShareState.idle) {
       return false;
@@ -306,12 +283,11 @@ class WiFiDirectShareService {
     _updateState(WiFiShareState.searchingForHotspot);
 
     try {
-      // Start HTTP server to receive notes
+
       _server = await HttpServer.bind(InternetAddress.anyIPv4, 8889);
 
       debugPrint('📥 Receiver started on port 8889');
 
-      // Listen for incoming notes
       _server!.listen((request) async {
         if (request.method == 'POST' && request.uri.path == '/receive') {
           await _handleReceivedNote(request);
@@ -333,7 +309,6 @@ class WiFiDirectShareService {
     }
   }
 
-  /// Handle received note
   Future<void> _handleReceivedNote(HttpRequest request) async {
     try {
       final body = await utf8.decodeStream(request);
@@ -343,7 +318,6 @@ class WiFiDirectShareService {
         final note = Note.fromJson(jsonData['data'] as Map<String, dynamic>);
         debugPrint('📥 Received note: ${note.topic}');
 
-        // Emit received note
         _receivedNotesController.add(note);
 
         request.response
@@ -360,7 +334,6 @@ class WiFiDirectShareService {
     }
   }
 
-  /// Generate random password for hotspot
   String _generatePassword() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     final random = DateTime.now().millisecondsSinceEpoch;
@@ -368,14 +341,12 @@ class WiFiDirectShareService {
         .join();
   }
 
-  /// Update state
   void _updateState(WiFiShareState newState) {
     _currentState = newState;
     _stateController.add(newState);
     debugPrint('🔄 WiFi State: $newState');
   }
 
-  /// Stop service
   Future<void> stop() async {
     try {
       await _server?.close();
@@ -388,7 +359,6 @@ class WiFiDirectShareService {
     }
   }
 
-  /// Dispose resources
   void dispose() {
     stop();
     _stateController.close();

@@ -1,5 +1,5 @@
-/// Enterprise-level Error Boundary Widget
-/// Catches and gracefully handles widget-level errors to prevent app crashes
+
+
 library;
 
 import 'package:flutter/foundation.dart';
@@ -7,8 +7,6 @@ import 'package:flutter/material.dart';
 
 import '../constants/app_constants.dart';
 
-/// Error boundary widget that catches errors in its child tree
-/// and displays a fallback UI instead of crashing the app
 class ErrorBoundary extends StatefulWidget {
   final Widget child;
   final Widget? fallback;
@@ -32,11 +30,11 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
   @override
   void initState() {
     super.initState();
-    // Store original error handler
+
     final originalOnError = FlutterError.onError;
 
     FlutterError.onError = (FlutterErrorDetails details) {
-      // Check if error is in our widget tree
+
       if (_isOurError(details)) {
         if (mounted) {
           setState(() {
@@ -46,14 +44,14 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
         }
         widget.onError?.call(details);
       } else {
-        // Pass to original handler
+
         originalOnError?.call(details);
       }
     };
   }
 
   bool _isOurError(FlutterErrorDetails details) {
-    // Simple heuristic - could be enhanced
+
     return details.context
             ?.toString()
             .contains(widget.child.runtimeType.toString()) ??
@@ -80,7 +78,6 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
   }
 }
 
-/// Default error widget shown when an error occurs
 class _DefaultErrorWidget extends StatelessWidget {
   final FlutterErrorDetails? errorDetails;
   final VoidCallback? onRetry;
@@ -167,7 +164,6 @@ class _DefaultErrorWidget extends StatelessWidget {
   }
 }
 
-/// Safe area wrapper that handles errors gracefully
 class SafeArea2 extends StatelessWidget {
   final Widget child;
   final EdgeInsets minimumPadding;
@@ -195,7 +191,6 @@ class SafeArea2 extends StatelessWidget {
   }
 }
 
-/// Async operation wrapper with loading and error states
 class AsyncBuilder<T> extends StatelessWidget {
   final Future<T> future;
   final Widget Function(T data) builder;
@@ -248,7 +243,6 @@ class AsyncBuilder<T> extends StatelessWidget {
   }
 }
 
-/// Stream wrapper with loading and error states
 class StreamBuilder2<T> extends StatelessWidget {
   final Stream<T> stream;
   final T? initialData;
@@ -305,9 +299,8 @@ class StreamBuilder2<T> extends StatelessWidget {
   }
 }
 
-/// Extension methods for easier error handling
 extension ContextExtensions on BuildContext {
-  /// Show a snackbar with error message
+
   void showErrorSnackBar(String message, {Duration? duration}) {
     ScaffoldMessenger.of(this).showSnackBar(
       SnackBar(
@@ -326,7 +319,6 @@ extension ContextExtensions on BuildContext {
     );
   }
 
-  /// Show a snackbar with success message
   void showSuccessSnackBar(String message, {Duration? duration}) {
     ScaffoldMessenger.of(this).showSnackBar(
       SnackBar(
@@ -338,7 +330,6 @@ extension ContextExtensions on BuildContext {
     );
   }
 
-  /// Show a snackbar with info message
   void showInfoSnackBar(String message, {Duration? duration}) {
     ScaffoldMessenger.of(this).showSnackBar(
       SnackBar(

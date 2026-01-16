@@ -1,5 +1,5 @@
-/// Enterprise-level Reusable UI Widgets
-/// Provides consistent, accessible, and responsive widgets across all platforms
+
+
 library;
 
 import 'dart:ui' as ui;
@@ -9,7 +9,6 @@ import 'package:flutter/services.dart';
 
 import '../utils/responsive_utils.dart';
 
-/// Adaptive scaffold that handles different screen sizes
 class AdaptiveScaffold extends StatelessWidget {
   final Widget? appBar;
   final Widget body;
@@ -41,7 +40,6 @@ class AdaptiveScaffold extends StatelessWidget {
     final deviceType = ResponsiveUtils.getDeviceType(context);
     final isDesktop = deviceType == DeviceType.desktop;
 
-    // On desktop, show drawer as permanent side panel
     if (isDesktop && drawer != null) {
       return Scaffold(
         backgroundColor: backgroundColor,
@@ -94,7 +92,6 @@ class AdaptiveScaffold extends StatelessWidget {
   }
 }
 
-/// Gradient background widget
 class GradientBackground extends StatelessWidget {
   final Widget child;
   final List<Color>? colors;
@@ -130,7 +127,6 @@ class GradientBackground extends StatelessWidget {
   }
 }
 
-/// Glassmorphic card widget
 class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
@@ -199,7 +195,6 @@ class GlassCard extends StatelessWidget {
   }
 }
 
-/// Responsive container that centers content on large screens
 class ResponsiveContainer extends StatelessWidget {
   final Widget child;
   final double maxWidth;
@@ -224,7 +219,6 @@ class ResponsiveContainer extends StatelessWidget {
   }
 }
 
-/// Primary button with loading state
 class PrimaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -297,7 +291,6 @@ class PrimaryButton extends StatelessWidget {
   }
 }
 
-/// Secondary/outlined button
 class SecondaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -368,7 +361,6 @@ class SecondaryButton extends StatelessWidget {
   }
 }
 
-/// Custom text field with validation
 class AppTextField extends StatelessWidget {
   final TextEditingController? controller;
   final String? label;
@@ -442,7 +434,6 @@ class AppTextField extends StatelessWidget {
   }
 }
 
-/// Empty state widget
 class EmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -517,7 +508,6 @@ class EmptyState extends StatelessWidget {
   }
 }
 
-/// Loading indicator widget
 class LoadingIndicator extends StatelessWidget {
   final String? message;
   final double size;
@@ -564,7 +554,6 @@ class LoadingIndicator extends StatelessWidget {
   }
 }
 
-/// Error display widget
 class ErrorDisplay extends StatelessWidget {
   final String title;
   final String? description;
@@ -639,7 +628,6 @@ class ErrorDisplay extends StatelessWidget {
   }
 }
 
-/// Section header widget
 class SectionHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
@@ -692,7 +680,6 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
-/// Feature card widget for home screen features
 class FeatureCard extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -785,7 +772,6 @@ class FeatureCard extends StatelessWidget {
   }
 }
 
-/// Animated fade in widget
 class FadeInWidget extends StatefulWidget {
   final Widget child;
   final Duration duration;
@@ -859,7 +845,6 @@ class _FadeInWidgetState extends State<FadeInWidget>
   }
 }
 
-/// Animated builder helper
 class AnimatedBuilder extends StatelessWidget {
   final Animation<double> animation;
   final Widget Function(BuildContext context, Widget? child) builder;
@@ -882,7 +867,6 @@ class AnimatedBuilder extends StatelessWidget {
   }
 }
 
-/// Shimmer loading placeholder
 class ShimmerPlaceholder extends StatefulWidget {
   final double width;
   final double height;

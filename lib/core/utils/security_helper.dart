@@ -1,5 +1,5 @@
-/// Security Utility - Input Sanitization & Validation
-/// Protects against XSS, SQL injection, and other attacks
+
+
 library;
 
 import 'package:flutter/foundation.dart';
@@ -7,11 +7,9 @@ import 'package:flutter/foundation.dart';
 class SecurityHelper {
   SecurityHelper._();
 
-  /// Sanitize user input to prevent XSS attacks
   static String sanitizeInput(String input) {
     if (input.isEmpty) return input;
 
-    // Remove dangerous HTML/script tags
     String sanitized = input
         .replaceAll(
             RegExp(r'<script[^>]*>.*?</script>', caseSensitive: false), '')
@@ -19,9 +17,8 @@ class SecurityHelper {
             RegExp(r'<iframe[^>]*>.*?</iframe>', caseSensitive: false), '')
         .replaceAll(RegExp(r'javascript:', caseSensitive: false), '')
         .replaceAll(RegExp(r'on\w+\s*=', caseSensitive: false),
-            ''); // Remove event handlers
+            '');
 
-    // Escape special characters
     sanitized = sanitized
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
@@ -33,7 +30,6 @@ class SecurityHelper {
     return sanitized.trim();
   }
 
-  /// Validate email format
   static bool isValidEmail(String email) {
     if (email.isEmpty) return false;
 
@@ -44,7 +40,6 @@ class SecurityHelper {
     return emailRegex.hasMatch(email) && email.length <= 254;
   }
 
-  /// Validate password strength
   static PasswordStrength checkPasswordStrength(String password) {
     if (password.length < 6) return PasswordStrength.weak;
 
@@ -66,7 +61,6 @@ class SecurityHelper {
     return PasswordStrength.weak;
   }
 
-  /// Check if password is in common weak passwords list
   static bool isWeakPassword(String password) {
     const weakPasswords = [
       '123456',
@@ -89,11 +83,9 @@ class SecurityHelper {
     return weakPasswords.contains(password.toLowerCase());
   }
 
-  /// Sanitize filename to prevent directory traversal
   static String sanitizeFilename(String filename) {
     if (filename.isEmpty) return 'unnamed_file';
 
-    // Remove path traversal attempts
     String sanitized = filename
         .replaceAll('..', '')
         .replaceAll('/', '')

@@ -6,23 +6,19 @@ import 'package:camera/camera.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image/image.dart' as img;
 import '../main.dart';
+import '../services/openrouter_service.dart';
 
-/// Advanced Math Solver - PhotoMath Clone
-/// Supports: Arithmetic, Algebra, Calculus, Trigonometry, Logarithms, Statistics
-
-// Step types for categorizing solution steps
 enum StepType {
-  problem, // Original problem statement
-  simplify, // Simplification step
-  substitute, // Substitution step
-  calculate, // Calculation step
-  rule, // Rule application (power rule, chain rule, etc.)
-  result, // Final result
-  error, // Error message
-  note, // Additional notes/explanations
+  problem,
+  simplify,
+  substitute,
+  calculate,
+  rule,
+  result,
+  error,
+  note,
 }
 
-// Represents a single step in the solution
 class MathStep {
   final String expression;
   final String explanation;
@@ -52,16 +48,13 @@ class _PhotomathScreenState extends State<PhotomathScreen>
   List<MathStep> _steps = [];
   final TextRecognizer _textRecognizer = TextRecognizer();
 
-  // Calculator state
   String _calculatorInput = '';
   bool _showCalculator = true;
   String _lastAnswer = '';
 
-  // Crosshair size for adjustable capture area
-  final double _crosshairWidth = 0.9; // percentage of screen width
-  double _crosshairHeight = 100.0; // fixed height in pixels
+  final double _crosshairWidth = 0.9;
+  double _crosshairHeight = 100.0;
 
-  // Results panel state
   bool _isResultsExpanded = true;
 
   @override
@@ -102,7 +95,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
         );
         await _cameraController!.initialize();
 
-        // Turn off flash by default
         if (_cameraController!.value.isInitialized) {
           await _cameraController!.setFlashMode(FlashMode.off);
         }
@@ -132,7 +124,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     try {
       final XFile image = await _cameraController!.takePicture();
 
-      // Crop image to crosshair area for better OCR accuracy
       final File croppedFile = await _cropImageToCrosshair(image.path);
 
       final inputImage = InputImage.fromFilePath(croppedFile.path);
@@ -154,7 +145,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
         });
       }
 
-      // Clean up temp files
       try {
         await File(image.path).delete();
         await croppedFile.delete();
@@ -172,7 +162,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     }
   }
 
-  // Crop image to crosshair area for focused OCR
   Future<File> _cropImageToCrosshair(String imagePath) async {
     try {
       final bytes = await File(imagePath).readAsBytes();
@@ -182,25 +171,19 @@ class _PhotomathScreenState extends State<PhotomathScreen>
         return File(imagePath);
       }
 
-      // Calculate crop area based on crosshair position
-      // Crosshair is centered, width is _crosshairWidth of screen, height is _crosshairHeight
       final screenWidth = MediaQuery.of(context).size.width;
       final screenHeight = MediaQuery.of(context).size.height *
-          0.4; // Camera takes 40% (flex 2 of 5)
+          0.4;
 
-      // Scale factors between camera preview and actual image
       final scaleX = image.width / screenWidth;
       final scaleY = image.height / screenHeight;
 
-      // Crosshair dimensions in image coordinates
       final crosshairWidthPx = (screenWidth * _crosshairWidth) * scaleX;
       final crosshairHeightPx = _crosshairHeight * scaleY;
 
-      // Center position
       final centerX = image.width / 2;
       final centerY = image.height / 2;
 
-      // Crop bounds
       final cropX =
           (centerX - crosshairWidthPx / 2).clamp(0, image.width - 1).toInt();
       final cropY =
@@ -209,7 +192,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       final cropHeight =
           crosshairHeightPx.clamp(1, image.height - cropY).toInt();
 
-      // Crop the image
       final croppedImage = img.copyCrop(
         image,
         x: cropX,
@@ -218,14 +200,12 @@ class _PhotomathScreenState extends State<PhotomathScreen>
         height: cropHeight,
       );
 
-      // Apply image enhancements for better OCR
       final enhanced = img.adjustColor(
         croppedImage,
         contrast: 1.3,
         brightness: 1.1,
       );
 
-      // Save cropped image
       final tempDir = Directory.systemTemp;
       final croppedPath =
           '${tempDir.path}/cropped_math_${DateTime.now().millisecondsSinceEpoch}.jpg';
@@ -239,17 +219,11 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // TEXT NORMALIZATION & OCR CORRECTION
-  // ═══════════════════════════════════════════════════════════════════════════
-
   String _normalizeMathExpression(String text) {
     String normalized = text.trim();
 
-    // Remove extra spaces and newlines
     normalized = normalized.replaceAll(RegExp(r'\s+'), ' ');
 
-    // Common OCR corrections for math symbols
     normalized = normalized
         .replaceAll('×', '*')
         .replaceAll('÷', '/')
@@ -289,20 +263,17 @@ class _PhotomathScreenState extends State<PhotomathScreen>
         .replaceAll('±', '+-')
         .replaceAll('∓', '-+');
 
-    // Replace 'x' with '*' only when between two numbers
     normalized = normalized.replaceAllMapped(
       RegExp(r'(\d)\s*[xX]\s*(\d)'),
       (m) => '${m[1]}*${m[2]}',
     );
 
-    // Fix common OCR misreads
     normalized = normalized
         .replaceAll(RegExp(r'[oO](?=\d)'), '0')
         .replaceAll(RegExp(r'(?<=\d)[oO]'), '0')
         .replaceAll(RegExp(r'[lI](?=\d)'), '1')
         .replaceAll(RegExp(r'(?<=\d)[lI]'), '1');
 
-    // Fix function names that might be split
     normalized = normalized
         .replaceAll(RegExp(r's\s*i\s*n\s*h', caseSensitive: false), 'sinh')
         .replaceAll(RegExp(r'c\s*o\s*s\s*h', caseSensitive: false), 'cosh')
@@ -326,7 +297,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
         .replaceAll(RegExp(r'f\s*a\s*c\s*t', caseSensitive: false), 'fact')
         .replaceAll(RegExp(r'l\s*i\s*m', caseSensitive: false), 'lim');
 
-    // Fix spacing around operators
     normalized = normalized
         .replaceAll(RegExp(r'\s*\+\s*'), '+')
         .replaceAll(RegExp(r'\s*-\s*'), '-')
@@ -338,20 +308,15 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     return normalized.trim();
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // MAIN PROBLEM SOLVER
-  // ═══════════════════════════════════════════════════════════════════════════
-
   void _solveMathProblem(String problem) {
     _steps = [];
     _solution = '';
 
-    // Normalize the problem
     String originalProblem = problem;
     problem = problem.toLowerCase().trim();
 
     try {
-      // Detect problem type and solve accordingly
+
       if (_isDerivative(problem)) {
         _solveDerivativeAdvanced(problem);
       } else if (_isIntegral(problem)) {
@@ -389,19 +354,57 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       }
 
       setState(() {
-        // Collapse results panel after solving to show collapsed summary
         _isResultsExpanded = false;
       });
     } catch (e) {
+
+      _solveWithAI(originalProblem);
+    }
+  }
+
+  Future<void> _solveWithAI(String problem) async {
+    setState(() {
+      _isProcessing = true;
+      _solution = 'Solving with AI...';
+      _steps = [MathStep(problem, 'Analyzing with AI', StepType.problem)];
+    });
+
+    try {
+      final result = await OpenRouterService.solveMathProblem(
+        problem: problem,
+        showSteps: true,
+      );
+
+      if (result.success && result.content != null) {
+        setState(() {
+          _solution = result.content!;
+          _steps = [
+            MathStep(problem, 'Original Problem', StepType.problem),
+            MathStep(result.content!, 'AI Solution', StepType.result),
+          ];
+          _isResultsExpanded = false;
+        });
+      } else {
+        setState(() {
+          _solution = 'Could not solve: $problem';
+          _steps = [
+            MathStep('Error', result.error ?? 'Unknown error', StepType.error)
+          ];
+        });
+      }
+    } catch (e) {
       setState(() {
-        _solution = 'Could not solve: $originalProblem';
+        _solution = 'Could not solve: $problem';
         _steps = [MathStep('Error', e.toString(), StepType.error)];
         _isResultsExpanded = false;
+      });
+    } finally {
+      setState(() {
+        _isProcessing = false;
       });
     }
   }
 
-  // Problem type detection helpers
   bool _isDerivative(String p) =>
       p.contains('derivative') ||
       p.contains('d/dx') ||
@@ -442,24 +445,19 @@ class _PhotomathScreenState extends State<PhotomathScreen>
   bool _isQuadraticEquation(String p) =>
       p.contains('^2') || p.contains('x²') || p.contains('x*x');
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // ADVANCED SOLVER METHODS
-  // ═══════════════════════════════════════════════════════════════════════════
-
   void _solveDerivativeAdvanced(String problem) {
-    // Use the existing _solveDerivative for now, can enhance later
+
     _solveDerivative(problem);
   }
 
   void _solveIntegralAdvanced(String problem) {
-    // Use the existing _solveIntegral for now
+
     _solveIntegral(problem);
   }
 
   void _solveLimit(String problem) {
     _steps.add(MathStep(problem, 'Evaluating limit', StepType.problem));
 
-    // Extract limit expression: lim x->a f(x)
     RegExp limitPattern =
         RegExp(r'lim\s*(?:x\s*(?:->|→)\s*(\d+|infinity|∞))?\s*(.+)');
     var match = limitPattern.firstMatch(problem);
@@ -471,11 +469,10 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       _steps.add(
           MathStep('x → $approach', 'Approaching value', StepType.simplify));
 
-      // Direct substitution for simple cases
       if (approach == 'infinity' || approach == '∞') {
         _steps.add(MathStep(
             'As x → ∞', 'Analyzing behavior at infinity', StepType.calculate));
-        // Check if polynomial
+
         if (expr.contains('^')) {
           _steps.add(MathStep('For polynomials, highest degree term dominates',
               'Limit rule', StepType.rule));
@@ -485,7 +482,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
         _steps.add(MathStep('Substitute x = $approach', 'Direct substitution',
             StepType.substitute));
 
-        // Try simple evaluation
         String evalExpr = expr.replaceAll('x', '($approach)');
         try {
           double result = _calculate(evalExpr);
@@ -510,7 +506,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     _steps.add(
         MathStep(problem, 'Solving trigonometric equation', StepType.problem));
 
-    // Common trig equations
     if (problem.contains('sin') && problem.contains('=')) {
       var parts = problem.split('=');
       String rightSide = parts.length > 1 ? parts[1].trim() : '0';
@@ -572,7 +567,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     _steps.add(
         MathStep(problem, 'Solving system of equations', StepType.problem));
 
-    // Split by semicolon or 'and'
     List<String> equations =
         problem.contains(';') ? problem.split(';') : problem.split(' and ');
 
@@ -584,8 +578,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       _steps.add(MathStep('Using substitution or elimination method',
           'Approach', StepType.rule));
 
-      // Simple case: try to extract and solve
-      // For now, provide guidance
       _solution =
           'System requires manual solving:\n1. Solve one equation for x or y\n2. Substitute into the other\n3. Solve for remaining variable';
     } else {
@@ -600,7 +592,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     _steps.add(
         MathStep('ax³ + bx² + cx + d = 0', 'Standard form', StepType.rule));
 
-    // For now, provide factoring guidance
     _steps
         .add(MathStep('Try rational root theorem', 'Method 1', StepType.note));
     _steps.add(MathStep('Possible roots: ±(factors of d)/(factors of a)',
@@ -614,17 +605,17 @@ class _PhotomathScreenState extends State<PhotomathScreen>
   }
 
   void _solveQuadraticAdvanced(String problem) {
-    // Use the existing quadratic solver
+
     _solveQuadratic(problem);
   }
 
   void _solveTrigonometryAdvanced(String problem) {
-    // Use existing trig solver
+
     _solveTrigonometry(problem);
   }
 
   void _solveLogarithmAdvanced(String problem) {
-    // Use existing log solver
+
     _solveLogarithm(problem);
   }
 
@@ -667,10 +658,9 @@ class _PhotomathScreenState extends State<PhotomathScreen>
   void _solveCombinatorics(String problem) {
     _steps.add(MathStep(problem, 'Solving combinatorics', StepType.problem));
 
-    // nCr = n! / (r! * (n-r)!)
     RegExp ncrPattern =
         RegExp(r'(\d+)\s*(?:c|choose)\s*(\d+)', caseSensitive: false);
-    // nPr = n! / (n-r)!
+
     RegExp nprPattern = RegExp(r'(\d+)\s*p\s*(\d+)', caseSensitive: false);
 
     var ncrMatch = ncrPattern.firstMatch(problem);
@@ -719,14 +709,13 @@ class _PhotomathScreenState extends State<PhotomathScreen>
   }
 
   void _solveExponentOrRootAdvanced(String problem) {
-    // Use existing solver
+
     _solveExponentOrRoot(problem);
   }
 
   void _solvePercentage(String problem) {
     _steps.add(MathStep(problem, 'Calculating percentage', StepType.problem));
 
-    // Pattern: X% of Y or X% * Y
     RegExp percentOfPattern = RegExp(r'(\d+\.?\d*)%\s*(?:of|\*)\s*(\d+\.?\d*)');
     var match = percentOfPattern.firstMatch(problem);
 
@@ -745,7 +734,7 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       _solution = '$percent% of $value = ${_formatNumber(result)}';
       _lastAnswer = _formatNumber(result);
     } else {
-      // Just convert percentage to decimal
+
       RegExp simplePercent = RegExp(r'(\d+\.?\d*)%');
       var simpleMatch = simplePercent.firstMatch(problem);
       if (simpleMatch != null) {
@@ -764,18 +753,13 @@ class _PhotomathScreenState extends State<PhotomathScreen>
   }
 
   void _evaluateExpressionAdvanced(String problem) {
-    // Use existing expression evaluator
+
     _evaluateExpression(problem);
   }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // BASIC SOLVER METHODS
-  // ═══════════════════════════════════════════════════════════════════════════
 
   void _solveEquation(String equation) {
     _steps.add(MathStep(equation, 'Solving equation', StepType.problem));
 
-    // Split by equals sign
     final parts = equation.split('=');
     if (parts.length != 2) {
       _solution = 'Invalid equation format';
@@ -785,7 +769,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     String left = parts[0].trim();
     String right = parts[1].trim();
 
-    // Check for quadratic equation (contains x^2 or x*x)
     if (equation.contains('^2') ||
         equation.contains('x*x') ||
         equation.contains('x²')) {
@@ -793,7 +776,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       return;
     }
 
-    // Linear equation solving
     _solveLinear(left, right);
   }
 
@@ -804,7 +786,7 @@ class _PhotomathScreenState extends State<PhotomathScreen>
         StepType.simplify));
 
     try {
-      // Parse coefficients
+
       double leftCoeff = _extractCoefficient(left, 'x');
       double leftConst = _extractConstant(left);
       double rightCoeff = _extractCoefficient(right, 'x');
@@ -815,7 +797,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       _steps.add(MathStep('Right: ${rightCoeff}x + $rightConst',
           'Parsing right side', StepType.calculate));
 
-      // Combine: (leftCoeff - rightCoeff)x = rightConst - leftConst
       double finalCoeff = leftCoeff - rightCoeff;
       double finalConst = rightConst - leftConst;
 
@@ -851,26 +832,22 @@ class _PhotomathScreenState extends State<PhotomathScreen>
         'x = (-b ± √(b²-4ac)) / 2a', 'Using quadratic formula', StepType.rule));
 
     try {
-      // Parse ax² + bx + c = 0
+
       double a = 0, b = 0, c = 0;
 
-      // Normalize equation to standard form
       String normalized = equation.replaceAll(' ', '').toLowerCase();
 
-      // Move everything to left side if needed
       if (normalized.contains('=')) {
         var parts = normalized.split('=');
         String leftSide = parts[0];
         String rightSide = parts[1];
 
-        // If right side is not just 0, we need to handle it
         if (rightSide != '0') {
-          // For simplicity, assume standard form ax^2+bx+c=0
+
         }
         normalized = leftSide;
       }
 
-      // Extract coefficient of x^2
       RegExp aPattern = RegExp(r'([+-]?\d*\.?\d*)[x]\^?2');
       var aMatch = aPattern.firstMatch(normalized);
       if (aMatch != null) {
@@ -882,7 +859,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
         a = 1;
       }
 
-      // Extract coefficient of x (not x^2)
       RegExp bPattern = RegExp(r'([+-]?\d*\.?\d*)x(?!\^)');
       var bMatch = bPattern.firstMatch(normalized);
       if (bMatch != null) {
@@ -892,25 +868,22 @@ class _PhotomathScreenState extends State<PhotomathScreen>
         b = double.tryParse(coeff) ?? 0;
       }
 
-      // Extract constant term - numbers not followed by x
       RegExp cPattern = RegExp(r'([+-]?\d+\.?\d*)(?![x\d])');
       var cMatches = cPattern.allMatches(normalized);
       for (var match in cMatches) {
         String val = match.group(1) ?? '0';
-        // Make sure it's not part of x^2 or coefficient
+
         if (!normalized.substring(0, match.start).endsWith('x') &&
             !normalized.substring(0, match.start).endsWith('^')) {
           c += double.tryParse(val) ?? 0;
         }
       }
 
-      // If we couldn't parse properly, try simpler approach
       if (a == 0) a = 1;
 
       _steps.add(MathStep('a = $a, b = $b, c = $c', 'Identified coefficients',
           StepType.simplify));
 
-      // Calculate discriminant
       double discriminant = b * b - 4 * a * c;
       _steps.add(MathStep('Δ = b² - 4ac = ${_formatNumber(discriminant)}',
           'Calculate discriminant', StepType.calculate));
@@ -950,7 +923,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
   void _solveDerivative(String problem) {
     _steps.add(MathStep(problem, 'Finding derivative', StepType.problem));
 
-    // Extract the expression to differentiate
     String expr = problem
         .replaceAll('derivative', '')
         .replaceAll('d/dx', '')
@@ -964,7 +936,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     _steps.add(MathStep(
         'f(x) = $expr', 'Expression to differentiate', StepType.simplify));
 
-    // Power rule: d/dx(x^n) = n*x^(n-1)
     RegExp powerPattern = RegExp(r'(\d*)x\^(\d+)');
     var match = powerPattern.firstMatch(expr);
     if (match != null) {
@@ -996,7 +967,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       return;
     }
 
-    // Check for just x^n without coefficient
     RegExp simplePattern = RegExp(r'x\^(\d+)');
     var simpleMatch = simplePattern.firstMatch(expr);
     if (simpleMatch != null) {
@@ -1017,7 +987,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       return;
     }
 
-    // Trigonometric derivatives
     if (expr.contains('sin')) {
       _steps.add(MathStep(
           'd/dx(sin(x)) = cos(x)', 'Sine derivative rule', StepType.rule));
@@ -1058,7 +1027,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       return;
     }
 
-    // If just x
     if (expr.trim() == 'x') {
       _steps.add(MathStep('d/dx(x) = 1', 'Derivative of x', StepType.rule));
       _solution = "f'(x) = 1";
@@ -1066,7 +1034,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       return;
     }
 
-    // If constant
     if (double.tryParse(expr.trim()) != null) {
       _steps.add(MathStep(
           'd/dx(c) = 0', 'Derivative of constant is 0', StepType.rule));
@@ -1096,7 +1063,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     _steps.add(
         MathStep('∫$expr dx', 'Expression to integrate', StepType.simplify));
 
-    // Power rule: ∫x^n dx = x^(n+1)/(n+1) + C
     RegExp powerPattern = RegExp(r'(\d*)x\^(\d+)');
     var match = powerPattern.firstMatch(expr);
     if (match != null) {
@@ -1121,7 +1087,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       return;
     }
 
-    // Simple x^n
     RegExp simplePattern = RegExp(r'x\^(\d+)');
     var simpleMatch = simplePattern.firstMatch(expr);
     if (simpleMatch != null) {
@@ -1194,7 +1159,7 @@ class _PhotomathScreenState extends State<PhotomathScreen>
         problem, 'Evaluating trigonometric expression', StepType.problem));
 
     try {
-      // Extract angle value
+
       RegExp anglePattern = RegExp(r'(a?sin|a?cos|a?tan)\(?(\d+\.?\d*)\)?');
       var match = anglePattern.firstMatch(problem);
 
@@ -1202,7 +1167,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
         String func = match.group(1)!;
         double angle = double.parse(match.group(2)!);
 
-        // Assume degrees if angle > 2π ≈ 6.28
         bool isDegrees = angle > 6.28;
         double radians = isDegrees ? angle * math.pi / 180 : angle;
 
@@ -1283,7 +1247,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
         return;
       }
 
-      // Trig identities
       if (problem.contains('sin^2') && problem.contains('cos^2')) {
         _steps.add(MathStep('sin²(θ) + cos²(θ)',
             'Recognizing Pythagorean identity', StepType.rule));
@@ -1293,7 +1256,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
         return;
       }
 
-      // Try to evaluate as expression
       _evaluateExpression(problem);
     } catch (e) {
       _solution = 'Error evaluating trigonometry';
@@ -1341,7 +1303,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
         return;
       }
 
-      // Log rules explanation
       if (problem.contains('log') && problem.contains('*')) {
         _steps.add(MathStep(
             'log(a·b) = log(a) + log(b)', 'Product rule', StepType.rule));
@@ -1367,7 +1328,7 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     _steps.add(MathStep(problem, 'Evaluating expression', StepType.problem));
 
     try {
-      // Square root
+
       if (problem.contains('sqrt')) {
         RegExp sqrtPattern = RegExp(r'sqrt\(?(\d+\.?\d*)\)?');
         var match = sqrtPattern.firstMatch(problem);
@@ -1391,7 +1352,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
         }
       }
 
-      // Power
       if (problem.contains('^')) {
         RegExp powerPattern = RegExp(r'(\d+\.?\d*)\^(\d+\.?\d*)');
         var match = powerPattern.firstMatch(problem);
@@ -1426,7 +1386,7 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     _steps.add(MathStep(expression, 'Evaluating expression', StepType.problem));
 
     try {
-      // Replace pi and e with values
+
       expression = expression
           .replaceAll('pi', '3.14159265359')
           .replaceAll('e', '2.71828182846');
@@ -1445,10 +1405,8 @@ class _PhotomathScreenState extends State<PhotomathScreen>
   double _calculate(String expression) {
     expression = expression.replaceAll(' ', '');
 
-    // Handle empty expression
     if (expression.isEmpty) return 0;
 
-    // Handle parentheses first (innermost first)
     while (expression.contains('(')) {
       RegExp parenPattern = RegExp(r'\(([^()]+)\)');
       var match = parenPattern.firstMatch(expression);
@@ -1461,20 +1419,17 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       }
     }
 
-    // Handle power (^) - right to left
     if (expression.contains('^')) {
       int lastPow = expression.lastIndexOf('^');
       if (lastPow > 0 && lastPow < expression.length - 1) {
         String left = expression.substring(0, lastPow);
         String right = expression.substring(lastPow + 1);
 
-        // Find the base (last number before ^)
         RegExp basePattern = RegExp(r'(\d+\.?\d*)$');
         var baseMatch = basePattern.firstMatch(left);
         if (baseMatch != null) {
           double base = double.parse(baseMatch.group(1)!);
 
-          // Find the exponent (first number/expression after ^)
           RegExp expPattern = RegExp(r'^(\d+\.?\d*)');
           var expMatch = expPattern.firstMatch(right);
           if (expMatch != null) {
@@ -1490,7 +1445,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       }
     }
 
-    // Parse addition and subtraction (lowest precedence)
     List<double> numbers = [];
     List<String> operators = [];
 
@@ -1514,12 +1468,10 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       numbers.add(_evaluateMulDiv(currentNum));
     }
 
-    // If no operators, just evaluate as multiplication/division
     if (operators.isEmpty && numbers.length == 1) {
       return numbers[0];
     }
 
-    // Calculate result with + and -
     double result = numbers.isNotEmpty ? numbers[0] : 0;
     for (int i = 0; i < operators.length && i + 1 < numbers.length; i++) {
       if (operators[i] == '+') {
@@ -1535,7 +1487,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
   double _evaluateMulDiv(String expression) {
     if (expression.isEmpty) return 0;
 
-    // Handle leading negative
     bool negative = false;
     if (expression.startsWith('-')) {
       negative = true;
@@ -1586,7 +1537,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     double coeff = 0;
     expr = expr.replaceAll(' ', '');
 
-    // Match patterns like 2x, -3x, +x, -x, x
     RegExp pattern = RegExp('([+-]?\\d*\\.?\\d*)$variable');
     for (var match in pattern.allMatches(expr)) {
       String c = match.group(1) ?? '1';
@@ -1602,10 +1552,8 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     double constant = 0;
     expr = expr.replaceAll(' ', '');
 
-    // Remove all terms with x
     String withoutX = expr.replaceAll(RegExp(r'[+-]?\d*\.?\d*x'), '');
 
-    // Sum remaining numbers
     RegExp pattern = RegExp(r'[+-]?\d+\.?\d*');
     for (var match in pattern.allMatches(withoutX)) {
       constant += double.tryParse(match.group(0)!) ?? 0;
@@ -1614,7 +1562,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     return constant;
   }
 
-  // Helper to get step color based on type
   Color _getStepColor(StepType type, Color primaryColor) {
     switch (type) {
       case StepType.problem:
@@ -1636,7 +1583,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     }
   }
 
-  // Helper to format steps as text for clipboard
   String _stepsToString() {
     return _steps
         .map((step) => '${step.explanation}: ${step.expression}')
@@ -1649,13 +1595,12 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       return n.toInt().toString();
     }
     String formatted = n.toStringAsFixed(6);
-    // Remove trailing zeros
+
     formatted = formatted.replaceAll(RegExp(r'0+$'), '');
     formatted = formatted.replaceAll(RegExp(r'\.$'), '');
     return formatted;
   }
 
-  // Calculator methods
   void _onCalculatorKey(String key) {
     setState(() {
       switch (key) {
@@ -1688,91 +1633,84 @@ class _PhotomathScreenState extends State<PhotomathScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = isDark ? AppColors.salmonDark : AppColors.salmon;
-    final bgColor = isDark ? AppColors.backgroundDark : Colors.grey[50];
+    final primaryColor = AppColors.salmon;
 
-    return Scaffold(
-      backgroundColor: bgColor,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: primaryColor.withValues(alpha: 0.95),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.white,
+    return GradientBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: primaryColor.withValues(alpha: 0.9),
+          elevation: 0,
+          automaticallyImplyLeading:
+              false,
+          title: const Text(
+            'PhotoMath',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'PhotoMath',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          // Toggle results panel
-          if (_solution.isNotEmpty)
+          actions: [
+
+            if (_solution.isNotEmpty)
+              IconButton(
+                icon: Icon(
+                  _isResultsExpanded ? Icons.expand_less : Icons.expand_more,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isResultsExpanded = !_isResultsExpanded;
+                  });
+                },
+                tooltip:
+                    _isResultsExpanded ? 'Collapse Results' : 'Expand Results',
+              ),
             IconButton(
               icon: Icon(
-                _isResultsExpanded ? Icons.expand_less : Icons.expand_more,
+                _showCalculator ? Icons.camera_alt : Icons.calculate,
                 color: Colors.white,
               ),
               onPressed: () {
                 setState(() {
-                  _isResultsExpanded = !_isResultsExpanded;
+                  _showCalculator = !_showCalculator;
                 });
               },
               tooltip:
-                  _isResultsExpanded ? 'Collapse Results' : 'Expand Results',
+                  _showCalculator ? 'Switch to Camera' : 'Switch to Calculator',
             ),
-          IconButton(
-            icon: Icon(
-              _showCalculator ? Icons.camera_alt : Icons.calculate,
-              color: Colors.white,
-            ),
-            onPressed: () {
-              setState(() {
-                _showCalculator = !_showCalculator;
-              });
-            },
-            tooltip:
-                _showCalculator ? 'Switch to Camera' : 'Switch to Calculator',
-          ),
-        ],
-      ),
-      body: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            // Spacer for AppBar
-            SizedBox(
-                height: MediaQuery.of(context).padding.top + kToolbarHeight),
-
-            // Camera or Calculator view - takes more space when results collapsed
-            Expanded(
-              flex: _isResultsExpanded ? 3 : 5,
-              child: _showCalculator ? _buildCalculator() : _buildCameraView(),
-            ),
-
-            // Results section - collapsible
-            if (_isResultsExpanded && _solution.isNotEmpty)
-              Expanded(
-                flex: 4,
-                child: _buildResultsSection(),
-              )
-            else if (_solution.isNotEmpty)
-              // Collapsed results - just show solution summary
-              _buildCollapsedResults(),
           ],
+        ),
+        body: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+
+              SizedBox(
+                  height: MediaQuery.of(context).padding.top + kToolbarHeight),
+
+              Expanded(
+                flex: _isResultsExpanded ? 3 : 5,
+                child:
+                    _showCalculator ? _buildCalculator() : _buildCameraView(),
+              ),
+
+              if (_isResultsExpanded && _solution.isNotEmpty)
+                Expanded(
+                  flex: 4,
+                  child: _buildResultsSection(),
+                )
+              else if (_solution.isNotEmpty)
+
+                _buildCollapsedResults(),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // Collapsed results widget showing just the answer
   Widget _buildCollapsedResults() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = isDark ? AppColors.salmonDark : AppColors.salmon;
@@ -1853,7 +1791,7 @@ class _PhotomathScreenState extends State<PhotomathScreen>
 
     return Stack(
       children: [
-        // Camera preview - full width
+
         ClipRRect(
           borderRadius:
               const BorderRadius.vertical(bottom: Radius.circular(20)),
@@ -1871,7 +1809,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
           ),
         ),
 
-        // Dark overlay outside crosshair to focus on capture area
         Positioned.fill(
           child: CustomPaint(
             painter: _CrosshairOverlayPainter(
@@ -1882,7 +1819,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
           ),
         ),
 
-        // Adjustable crosshair with resize handles
         Center(
           child: GestureDetector(
             onVerticalDragUpdate: (details) {
@@ -1900,7 +1836,7 @@ class _PhotomathScreenState extends State<PhotomathScreen>
               ),
               child: Stack(
                 children: [
-                  // Corner markers
+
                   Positioned(
                       top: 0, left: 0, child: _buildCornerMarker(primaryColor)),
                   Positioned(
@@ -1917,7 +1853,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
                       child: _buildCornerMarker(primaryColor,
                           flipX: true, flipY: true)),
 
-                  // Hint text
                   Center(
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -1937,7 +1872,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
                     ),
                   ),
 
-                  // Resize hint at bottom
                   Positioned(
                     bottom: 4,
                     left: 0,
@@ -1959,7 +1893,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
           ),
         ),
 
-        // Capture button
         Positioned(
           bottom: 20,
           left: 0,
@@ -1999,7 +1932,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
           ),
         ),
 
-        // Instructions
         Positioned(
           top: 10,
           left: 0,
@@ -2022,7 +1954,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     );
   }
 
-  /// Builds a corner marker for the crosshair
   Widget _buildCornerMarker(Color color,
       {bool flipX = false, bool flipY = false}) {
     return Transform(
@@ -2047,7 +1978,7 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       padding: const EdgeInsets.all(12),
       child: Column(
         children: [
-          // Display
+
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -2090,7 +2021,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
           ),
           const SizedBox(height: 12),
 
-          // Scientific function row
           Container(
             height: 40,
             margin: const EdgeInsets.only(bottom: 8),
@@ -2111,7 +2041,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
             ),
           ),
 
-          // Keypad
           Expanded(
             child: GridView.count(
               crossAxisCount: 5,
@@ -2195,12 +2124,10 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     );
   }
 
-  /// Scientific function key builder for the scrollable row
   Widget _buildScientificKey(String label) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = isDark ? AppColors.salmonDark : AppColors.salmon;
 
-    // Map display labels to actual function inputs
     String getInputValue() {
       switch (label) {
         case 'sin':
@@ -2252,7 +2179,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
     );
   }
 
-  /// Toggle sign of the current input (positive/negative)
   void _toggleSign() {
     if (_calculatorInput.isEmpty) return;
 
@@ -2285,7 +2211,7 @@ class _PhotomathScreenState extends State<PhotomathScreen>
       ),
       child: Column(
         children: [
-          // Handle - tap to collapse
+
           GestureDetector(
             onTap: () {
               setState(() {
@@ -2308,14 +2234,13 @@ class _PhotomathScreenState extends State<PhotomathScreen>
             ),
           ),
 
-          // Content
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Recognized text
+
                   if (_recognizedText.isNotEmpty) ...[
                     Text(
                       'Detected Expression:',
@@ -2346,7 +2271,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
                     const SizedBox(height: 20),
                   ],
 
-                  // Solution
                   if (_solution.isNotEmpty) ...[
                     Text(
                       'Solution:',
@@ -2378,7 +2302,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
                     const SizedBox(height: 20),
                   ],
 
-                  // Steps
                   if (_steps.isNotEmpty) ...[
                     Text(
                       'Step-by-Step Solution:',
@@ -2452,7 +2375,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
                     }),
                   ],
 
-                  // Empty state
                   if (_solution.isEmpty && _steps.isEmpty) ...[
                     Center(
                       child: Column(
@@ -2524,7 +2446,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
             ),
           ),
 
-          // Compact action buttons just above navbar
           if (_solution.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(
@@ -2595,7 +2516,6 @@ class _PhotomathScreenState extends State<PhotomathScreen>
   }
 }
 
-/// Custom painter for the crosshair overlay with a transparent hole
 class _CrosshairOverlayPainter extends CustomPainter {
   final double crosshairWidth;
   final double crosshairHeight;
@@ -2611,7 +2531,6 @@ class _CrosshairOverlayPainter extends CustomPainter {
       ..color = Colors.black.withAlpha(128)
       ..style = PaintingStyle.fill;
 
-    // Calculate crosshair rectangle position (centered)
     final crosshairLeft = (size.width - crosshairWidth) / 2;
     final crosshairTop = (size.height - crosshairHeight) / 2;
     final crosshairRect = Rect.fromLTWH(
@@ -2621,20 +2540,16 @@ class _CrosshairOverlayPainter extends CustomPainter {
       crosshairHeight,
     );
 
-    // Create path for the entire canvas
     final path = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
 
-    // Subtract the crosshair area to create a hole
     final holePath = Path()
       ..addRRect(
           RRect.fromRectAndRadius(crosshairRect, const Radius.circular(8)));
 
-    // Combine paths to create overlay with hole
     final combinedPath = Path.combine(PathOperation.difference, path, holePath);
 
     canvas.drawPath(combinedPath, paint);
 
-    // Draw border around the crosshair hole
     final borderPaint = Paint()
       ..color = Colors.white.withAlpha(204)
       ..style = PaintingStyle.stroke
@@ -2653,7 +2568,6 @@ class _CrosshairOverlayPainter extends CustomPainter {
   }
 }
 
-/// Custom painter for corner markers
 class _CornerMarkerPainter extends CustomPainter {
   final Color color;
 

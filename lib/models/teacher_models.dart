@@ -1,15 +1,14 @@
-// filepath: lib/models/teacher_models.dart
-/// Teacher Dashboard Data Models
-/// Compact JSON-serializable models for SharedPreferences storage
 
-/// Student record with marks and attendance
+
+library;
+
 class StudentRecord {
   final String id;
   final String name;
   final String rollNumber;
-  final String classId; // e.g., "10-A"
-  final Map<String, double> marks; // subject -> marks (0-100)
-  final List<String> attendanceDates; // ISO8601 dates when present
+  final String classId;
+  final Map<String, double> marks;
+  final List<String> attendanceDates;
 
   const StudentRecord({
     required this.id,
@@ -56,12 +55,11 @@ class StudentRecord {
       );
 }
 
-/// Class/Section grouping
 class ClassSection {
   final String id;
-  final String name; // e.g., "Class 10-A"
-  final String grade; // e.g., "10"
-  final String section; // e.g., "A"
+  final String name;
+  final String grade;
+  final String section;
   final List<String> studentIds;
 
   const ClassSection({
@@ -89,15 +87,14 @@ class ClassSection {
       );
 }
 
-/// Lesson plan entry
 class LessonPlan {
   final String id;
   final String classId;
   final String subject;
   final String topic;
-  final String date; // ISO8601
+  final String date;
   final String notes;
-  final String? aiSummary; // Optional Gemini-generated summary
+  final String? aiSummary;
 
   const LessonPlan({
     required this.id,
@@ -130,13 +127,12 @@ class LessonPlan {
       );
 }
 
-/// Timetable entry
 class TimetableEntry {
   final String id;
   final String classId;
-  final String dayOfWeek; // "Monday", "Tuesday", etc.
-  final String startTime; // "09:00"
-  final String endTime; // "10:00"
+  final String dayOfWeek;
+  final String startTime;
+  final String endTime;
   final String subject;
   final String room;
 
@@ -171,11 +167,10 @@ class TimetableEntry {
       );
 }
 
-/// Attendance record for a specific date
 class AttendanceRecord {
-  final String date; // ISO8601
+  final String date;
   final String classId;
-  final Map<String, bool> attendance; // studentId -> present/absent
+  final Map<String, bool> attendance;
 
   const AttendanceRecord({
     required this.date,

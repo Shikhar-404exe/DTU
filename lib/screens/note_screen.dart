@@ -1,10 +1,11 @@
-// lib/screens/note_screen.dart
+
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../main.dart'; // <-- Needed for GradientBackground
+import '../main.dart';
 import '../services/notes_api_service.dart';
 import '../services/storage_service.dart';
 import '../services/qr_share_helper.dart';
@@ -12,6 +13,7 @@ import '../models/note_organization.dart';
 import 'note_share_qr.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'doubts_screen.dart';
 
 class NoteScreen extends StatefulWidget {
   const NoteScreen({super.key});
@@ -35,7 +37,6 @@ class _NoteScreenState extends State<NoteScreen> {
   bool loading = false;
   String? outputNote;
 
-  // Organization fields
   String _selectedClassId = 'class_10';
   String _selectedSubjectId = 'math';
   String _selectedCategoryId = 'notes';
@@ -75,7 +76,7 @@ class _NoteScreenState extends State<NoteScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GradientBackground(
-      // 🌈 FIX: Entire screen wrapped
+
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -101,9 +102,8 @@ class _NoteScreenState extends State<NoteScreen> {
                 _field(details, "Additional Detail", isDark, max: 3),
                 const SizedBox(height: 16),
 
-                // Class Dropdown
                 DropdownButtonFormField<String>(
-                  value: _selectedClassId,
+                  initialValue: _selectedClassId,
                   decoration: InputDecoration(
                     labelText: 'Class / Grade',
                     prefixIcon: const Icon(Icons.school),
@@ -129,9 +129,9 @@ class _NoteScreenState extends State<NoteScreen> {
                 ),
 
                 const SizedBox(height: 16),
-                // Subject Dropdown
+
                 DropdownButtonFormField<String>(
-                  value: _selectedSubjectId,
+                  initialValue: _selectedSubjectId,
                   decoration: InputDecoration(
                     labelText: 'Subject',
                     prefixIcon: const Icon(Icons.book),
@@ -164,9 +164,9 @@ class _NoteScreenState extends State<NoteScreen> {
                 ),
 
                 const SizedBox(height: 16),
-                // Category Dropdown
+
                 DropdownButtonFormField<String>(
-                  value: _selectedCategoryId,
+                  initialValue: _selectedCategoryId,
                   decoration: InputDecoration(
                     labelText: 'Category',
                     prefixIcon: const Icon(Icons.category),
@@ -238,7 +238,7 @@ class _NoteScreenState extends State<NoteScreen> {
                   divisions: 4,
                   activeColor: isDark ? AppColors.salmonDark : AppColors.salmon,
                   inactiveColor: isDark
-                      ? AppColors.salmonDark.withAlpha(77) // ~0.3 opacity
+                      ? AppColors.salmonDark.withAlpha(77)
                       : AppColors.salmon.withAlpha(77),
                   onChanged: (v) => setState(() => detailedness = v),
                 ),
@@ -274,13 +274,13 @@ class _NoteScreenState extends State<NoteScreen> {
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
                       color: isDark
-                          ? AppColors.cardDark.withAlpha(230) // ~0.9 opacity
+                          ? AppColors.cardDark.withAlpha(230)
                           : Colors.white.withAlpha(230),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
                           color: (isDark ? Colors.black : AppColors.salmon)
-                              .withAlpha(38), // ~0.15 opacity
+                              .withAlpha(38),
                           blurRadius: 12,
                           offset: const Offset(0, 6),
                         ),
@@ -294,6 +294,96 @@ class _NoteScreenState extends State<NoteScreen> {
                         height: 1.8,
                         letterSpacing: 0.3,
                       ),
+                      contextMenuBuilder: (context, editableTextState) {
+                        final selection =
+                            editableTextState.textEditingValue.selection;
+                        final selectedText =
+                            selection.isValid && !selection.isCollapsed
+                                ? editableTextState.textEditingValue.text
+                                    .substring(selection.start, selection.end)
+                                : '';
+
+                        return AdaptiveTextSelectionToolbar(
+                          anchors: editableTextState.contextMenuAnchors,
+                          children: [
+
+                            TextSelectionToolbarTextButton(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              onPressed: () {
+                                if (selectedText.isNotEmpty) {
+                                  Clipboard.setData(
+                                      ClipboardData(text: selectedText));
+                                  editableTextState.hideToolbar();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text('Copied to clipboard')),
+                                  );
+                                }
+                              },
+                              child: const Text('Copy'),
+                            ),
+
+                            TextSelectionToolbarTextButton(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              onPressed: () {
+                                editableTextState
+                                    .selectAll(SelectionChangedCause.toolbar);
+                              },
+                              child: const Text('Select All'),
+                            ),
+
+                            TextSelectionToolbarTextButton(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              onPressed: () async {
+                                if (selectedText.isNotEmpty) {
+                                  final noteTitle = topic.text.isNotEmpty
+                                      ? topic.text
+                                      : 'Generated Note';
+                                  await addDoubtFromText(
+                                      selectedText, noteTitle);
+                                  editableTextState.hideToolbar();
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content:
+                                            const Text('📌 Marked as doubt!'),
+                                        backgroundColor: AppColors.salmon,
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12)),
+                                      ),
+                                    );
+                                  }
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text(
+                                            'Select text to mark as doubt')),
+                                  );
+                                }
+                              },
+                              child: const Text('📌 Mark'),
+                            ),
+
+                            TextSelectionToolbarTextButton(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              onPressed: () {
+                                editableTextState.hideToolbar();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Opening AI assistant...')),
+                                );
+                              },
+                              child: const Text('Ask AI'),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -312,7 +402,6 @@ class _NoteScreenState extends State<NoteScreen> {
                           onPressed: () async {
                             final noteToShare = outputNote!;
 
-                            // Show loading dialog
                             showDialog(
                               context: context,
                               barrierDismissible: false,
@@ -323,7 +412,7 @@ class _NoteScreenState extends State<NoteScreen> {
                             );
 
                             try {
-                              // Use QRShareHelper for smart compression/P2P
+
                               final payload =
                                   await QRShareHelper.prepareForSharing(
                                 title: '${subject.text} - ${topic.text}',
@@ -331,9 +420,8 @@ class _NoteScreenState extends State<NoteScreen> {
                               );
 
                               if (!mounted) return;
-                              Navigator.pop(context); // Close loading
+                              Navigator.pop(context);
 
-                              // Navigate to QR share screen with payload
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -345,7 +433,7 @@ class _NoteScreenState extends State<NoteScreen> {
                               );
                             } catch (e) {
                               if (!mounted) return;
-                              Navigator.pop(context); // Close loading
+                              Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                     content: Text('Failed to prepare QR: $e')),
@@ -397,7 +485,7 @@ class _NoteScreenState extends State<NoteScreen> {
     });
 
     try {
-      // Get class, subject, category names for better prompt
+
       final className =
           NoteClass.allClasses.firstWhere((c) => c.id == _selectedClassId).name;
       final subjectName = Subject.allSubjects
@@ -413,7 +501,6 @@ class _NoteScreenState extends State<NoteScreen> {
               ? 'detailed'
               : 'comprehensive';
 
-      // Enhanced prompt with organization context
       final enhancedPrompt = '''
 Generate $detailLevel educational content for:
 
@@ -462,7 +549,6 @@ Format with clear headings, bullet points, examples, and summary.
           File("${dir.path}/note_${DateTime.now().millisecondsSinceEpoch}.txt");
       await file.writeAsString(outputNote!);
 
-      // Save as organized note
       final prefs = await SharedPreferences.getInstance();
       final notesJson = prefs.getString('organized_notes') ?? '[]';
       final notesList =
@@ -483,7 +569,6 @@ Format with clear headings, bullet points, examples, and summary.
       notesList.add(newNote.toJson());
       await prefs.setString('organized_notes', jsonEncode(notesList));
 
-      // Also save to old format for backward compatibility
       final notes = await StorageService.loadNotes();
       notes.add({
         "v": 1,

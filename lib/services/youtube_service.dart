@@ -1,9 +1,10 @@
-/// YouTube Service
-/// Handles educational video search and recommendations
+
+
+library;
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'api_config.dart';
+import '../core/constants/app_constants.dart';
 
 class YouTubeVideo {
   final String videoId;
@@ -34,17 +35,41 @@ class YouTubeVideo {
 
   factory YouTubeVideo.fromJson(Map<String, dynamic> json) {
     return YouTubeVideo(
-      videoId: json['video_id'],
-      title: json['title'],
-      description: json['description'] ?? '',
-      thumbnail: json['thumbnail'],
-      channelTitle: json['channel_title'],
-      channelId: json['channel_id'],
-      publishedAt: json['published_at'],
-      url: json['url'],
+      videoId: json['video_id'] ?? json['id']?['videoId'] ?? '',
+      title: json['title'] ?? json['snippet']?['title'] ?? '',
+      description: json['description'] ?? json['snippet']?['description'] ?? '',
+      thumbnail: json['thumbnail'] ??
+          json['snippet']?['thumbnails']?['medium']?['url'] ??
+          '',
+      channelTitle:
+          json['channel_title'] ?? json['snippet']?['channelTitle'] ?? '',
+      channelId: json['channel_id'] ?? json['snippet']?['channelId'] ?? '',
+      publishedAt:
+          json['published_at'] ?? json['snippet']?['publishedAt'] ?? '',
+      url: json['url'] ??
+          'https://www.youtube.com/watch?v=${json['video_id'] ?? json['id']?['videoId'] ?? ''}',
       viewCount: json['view_count'],
       likeCount: json['like_count'],
       duration: json['duration'],
+    );
+  }
+
+  factory YouTubeVideo.fromYouTubeApi(Map<String, dynamic> item) {
+    final snippet = item['snippet'] ?? {};
+    final id = item['id'];
+    final videoId = id is String ? id : (id?['videoId'] ?? '');
+
+    return YouTubeVideo(
+      videoId: videoId,
+      title: snippet['title'] ?? '',
+      description: snippet['description'] ?? '',
+      thumbnail: snippet['thumbnails']?['medium']?['url'] ??
+          snippet['thumbnails']?['default']?['url'] ??
+          '',
+      channelTitle: snippet['channelTitle'] ?? '',
+      channelId: snippet['channelId'] ?? '',
+      publishedAt: snippet['publishedAt'] ?? '',
+      url: 'https://www.youtube.com/watch?v=$videoId',
     );
   }
 }
@@ -72,6 +97,9 @@ class YouTubeChannel {
 }
 
 class YouTubeService {
+  static const String _baseUrl = 'https://www.googleapis.com/youtube/v3';
+  static String get _apiKey => AppConstants.youtubeApiKey;
+
   static Future<Map<String, dynamic>> searchVideos({
     required String query,
     int maxResults = 10,
@@ -81,81 +109,248 @@ class YouTubeService {
     bool useOnline = true,
   }) async {
     try {
-      final response = await http
-          .post(
-            Uri.parse('${ApiConfig.currentBaseUrl}${ApiConfig.youtubeSearch}'),
-            headers: ApiConfig.headers,
-            body: jsonEncode({
-              'query': query,
-              'max_results': maxResults,
-              'language': language,
-              'duration': duration,
-              'order': order,
-              'use_online': useOnline,
-            }),
-          )
-          .timeout(ApiConfig.timeout);
+
+      final searchQuery = '$query educational tutorial learning';
+
+      final uri = Uri.parse('$_baseUrl/search').replace(queryParameters: {
+        'part': 'snippet',
+        'q': searchQuery,
+        'type': 'video',
+        'maxResults': maxResults.toString(),
+        'order': order,
+        'relevanceLanguage': language,
+        'safeSearch': 'strict',
+        'videoCategoryId': '27',
+        'key': _apiKey,
+      });
+
+      final response = await http.get(uri).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        final items = data['items'] as List? ?? [];
 
-        if (data['success']) {
-          // Online results with videos
-          if (data['provider'] == 'youtube_api' && data['videos'] != null) {
-            final videos = (data['videos'] as List)
-                .map((v) => YouTubeVideo.fromJson(v))
-                .toList();
+        final videos = items
+            .where((item) => item['id']?['videoId'] != null)
+            .map((item) => YouTubeVideo.fromYouTubeApi(item))
+            .toList();
 
-            return {
-              'success': true,
-              'provider': 'online',
-              'videos': videos,
-              'result_count': videos.length,
-            };
-          }
-
-          // Offline results with channel recommendations
-          if (data['provider'] == 'offline' &&
-              data['recommended_channels'] != null) {
-            final channels = (data['recommended_channels'] as List)
-                .map((c) => YouTubeChannel.fromJson(c))
-                .toList();
-
-            return {
-              'success': true,
-              'provider': 'offline',
-              'channels': channels,
-              'detected_subject': data['detected_subject'],
-              'note': data['note'],
-            };
-          }
-        }
-
-        return {'success': false, 'error': data['error'] ?? 'Unknown error'};
+        return {
+          'success': true,
+          'provider': 'online',
+          'videos': videos,
+          'result_count': videos.length,
+        };
       } else {
-        return {'success': false, 'error': 'API request failed'};
+
+        return _getOfflineRecommendations(query);
       }
     } catch (e) {
-      print('Error searching videos: $e');
-      return {'success': false, 'error': e.toString()};
+      print('YouTube API error: $e');
+
+      return _getOfflineRecommendations(query);
     }
+  }
+
+  static Map<String, dynamic> _getOfflineRecommendations(String query) {
+    final subject = _detectSubject(query);
+    final channels = _getChannelsForSubject(subject);
+
+    return {
+      'success': true,
+      'provider': 'offline',
+      'channels': channels,
+      'detected_subject': subject,
+      'note':
+          'Showing recommended educational channels. Connect to internet for video search.',
+    };
+  }
+
+  static String _detectSubject(String query) {
+    final q = query.toLowerCase();
+    if (q.contains('math') ||
+        q.contains('algebra') ||
+        q.contains('geometry') ||
+        q.contains('calculus')) {
+      return 'Mathematics';
+    } else if (q.contains('physics') ||
+        q.contains('force') ||
+        q.contains('energy') ||
+        q.contains('motion')) {
+      return 'Physics';
+    } else if (q.contains('chemistry') ||
+        q.contains('chemical') ||
+        q.contains('element') ||
+        q.contains('reaction')) {
+      return 'Chemistry';
+    } else if (q.contains('biology') ||
+        q.contains('cell') ||
+        q.contains('organism') ||
+        q.contains('life')) {
+      return 'Biology';
+    } else if (q.contains('history') ||
+        q.contains('war') ||
+        q.contains('civilization') ||
+        q.contains('empire')) {
+      return 'History';
+    } else if (q.contains('english') ||
+        q.contains('grammar') ||
+        q.contains('literature')) {
+      return 'English';
+    } else if (q.contains('science')) {
+      return 'Science';
+    }
+    return 'General';
+  }
+
+  static List<YouTubeChannel> _getChannelsForSubject(String subject) {
+    final channelMap = {
+      'Mathematics': [
+        YouTubeChannel(
+            name: '3Blue1Brown',
+            id: 'UCYO_jab_esuFRV4b17AJtAw',
+            language: 'English'),
+        YouTubeChannel(
+            name: 'Khan Academy',
+            id: 'UC4a-Gbdw7vOaccHmFo40b9g',
+            language: 'English'),
+        YouTubeChannel(
+            name: 'Mathologer',
+            id: 'UC1_uAIS3r8Vu6JjXWvastJg',
+            language: 'English'),
+      ],
+      'Physics': [
+        YouTubeChannel(
+            name: 'Veritasium',
+            id: 'UCHnyfMqiRRG1u-2MsSQLbXA',
+            language: 'English'),
+        YouTubeChannel(
+            name: 'Physics Wallah',
+            id: 'UCrC79Pu5C3w_gxRf30_XMQQ',
+            language: 'Hindi'),
+        YouTubeChannel(
+            name: 'MinutePhysics',
+            id: 'UCUHW94eEFW7hkUMVaZz4eDg',
+            language: 'English'),
+      ],
+      'Chemistry': [
+        YouTubeChannel(
+            name: 'NileRed',
+            id: 'UCFhXFikryT4aFcLkLw2LBLA',
+            language: 'English'),
+        YouTubeChannel(
+            name: 'Periodic Videos',
+            id: 'UCtESv1e7ntJaLJYKIO1FoYw',
+            language: 'English'),
+        YouTubeChannel(
+            name: 'Chemistry Wallah',
+            id: 'UCrC79Pu5C3w_gxRf30_XMQQ',
+            language: 'Hindi'),
+      ],
+      'Biology': [
+        YouTubeChannel(
+            name: 'CrashCourse',
+            id: 'UCX6b17PVsYBQ0ip5gyeme-Q',
+            language: 'English'),
+        YouTubeChannel(
+            name: 'Amoeba Sisters',
+            id: 'UCkckDgmFpBxTZAYp0Q8VHDw',
+            language: 'English'),
+        YouTubeChannel(
+            name: 'Biology Wallah',
+            id: 'UCrC79Pu5C3w_gxRf30_XMQQ',
+            language: 'Hindi'),
+      ],
+      'Science': [
+        YouTubeChannel(
+            name: 'Kurzgesagt',
+            id: 'UCsXVk37bltHxD1rDPwtNM8Q',
+            language: 'English'),
+        YouTubeChannel(
+            name: 'SmarterEveryDay',
+            id: 'UC6107grRI4m0o2-emgoDnAA',
+            language: 'English'),
+        YouTubeChannel(
+            name: 'Vsauce',
+            id: 'UC6nSFpj9HTCZ5t-N3Rm3-HA',
+            language: 'English'),
+      ],
+      'History': [
+        YouTubeChannel(
+            name: 'OverSimplified',
+            id: 'UCNIuvl7V8zACPpTmmNIqP2A',
+            language: 'English'),
+        YouTubeChannel(
+            name: 'Extra Credits',
+            id: 'UCCODtTcd5M1JavPCOr_Uydg',
+            language: 'English'),
+        YouTubeChannel(
+            name: 'History Matters',
+            id: 'UC22BdTgxefuvUivrjevzjOw',
+            language: 'English'),
+      ],
+      'English': [
+        YouTubeChannel(
+            name: 'English with Lucy',
+            id: 'UCz4tgANd4yy8Oe0iXCdSWfA',
+            language: 'English'),
+        YouTubeChannel(
+            name: 'Learn English with TV Series',
+            id: 'UCKgpamMlm872zkGDcBJHYDg',
+            language: 'English'),
+      ],
+      'General': [
+        YouTubeChannel(
+            name: 'Khan Academy',
+            id: 'UC4a-Gbdw7vOaccHmFo40b9g',
+            language: 'English'),
+        YouTubeChannel(
+            name: 'TED-Ed',
+            id: 'UCsooa4yRKGN_zEE8iknghZA',
+            language: 'English'),
+        YouTubeChannel(
+            name: 'CrashCourse',
+            id: 'UCX6b17PVsYBQ0ip5gyeme-Q',
+            language: 'English'),
+      ],
+    };
+
+    return channelMap[subject] ?? channelMap['General']!;
   }
 
   static Future<YouTubeVideo?> getVideoDetails(String videoId) async {
     try {
-      final response = await http
-          .get(
-            Uri.parse(
-                '${ApiConfig.currentBaseUrl}${ApiConfig.youtubeVideo(videoId)}'),
-            headers: ApiConfig.headers,
-          )
-          .timeout(ApiConfig.timeout);
+      final uri = Uri.parse('$_baseUrl/videos').replace(queryParameters: {
+        'part': 'snippet,statistics,contentDetails',
+        'id': videoId,
+        'key': _apiKey,
+      });
+
+      final response = await http.get(uri).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        final items = data['items'] as List? ?? [];
 
-        if (data['success']) {
-          return YouTubeVideo.fromJson(data);
+        if (items.isNotEmpty) {
+          final item = items.first;
+          final snippet = item['snippet'] ?? {};
+          final stats = item['statistics'] ?? {};
+          final contentDetails = item['contentDetails'] ?? {};
+
+          return YouTubeVideo(
+            videoId: videoId,
+            title: snippet['title'] ?? '',
+            description: snippet['description'] ?? '',
+            thumbnail: snippet['thumbnails']?['high']?['url'] ?? '',
+            channelTitle: snippet['channelTitle'] ?? '',
+            channelId: snippet['channelId'] ?? '',
+            publishedAt: snippet['publishedAt'] ?? '',
+            url: 'https://www.youtube.com/watch?v=$videoId',
+            viewCount: int.tryParse(stats['viewCount']?.toString() ?? ''),
+            likeCount: int.tryParse(stats['likeCount']?.toString() ?? ''),
+            duration: contentDetails['duration'],
+          );
         }
       }
       return null;
@@ -168,40 +363,19 @@ class YouTubeService {
   static Future<List<YouTubeChannel>> getChannelRecommendations({
     String subject = 'General',
   }) async {
-    try {
-      final response = await http
-          .get(
-            Uri.parse(
-                '${ApiConfig.currentBaseUrl}${ApiConfig.youtubeChannels(subject)}'),
-            headers: ApiConfig.headers,
-          )
-          .timeout(ApiConfig.timeout);
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        if (data['success']) {
-          return (data['channels'] as List)
-              .map((c) => YouTubeChannel.fromJson(c))
-              .toList();
-        }
-      }
-      return [];
-    } catch (e) {
-      print('Error getting channels: $e');
-      return [];
-    }
+    return _getChannelsForSubject(subject);
   }
 
   static Future<bool> checkHealth() async {
     try {
-      final response = await http
-          .get(
-            Uri.parse('${ApiConfig.currentBaseUrl}${ApiConfig.youtubeHealth}'),
-            headers: ApiConfig.headers,
-          )
-          .timeout(ApiConfig.timeout);
+      final uri = Uri.parse('$_baseUrl/videos').replace(queryParameters: {
+        'part': 'snippet',
+        'chart': 'mostPopular',
+        'maxResults': '1',
+        'key': _apiKey,
+      });
 
+      final response = await http.get(uri).timeout(const Duration(seconds: 5));
       return response.statusCode == 200;
     } catch (e) {
       print('YouTube health check failed: $e');

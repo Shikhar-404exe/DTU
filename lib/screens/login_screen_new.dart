@@ -1,5 +1,5 @@
-/// Enterprise-level Login Screen
-/// Provides secure Firebase authentication with comprehensive error handling
+
+
 library;
 
 import 'dart:ui';
@@ -15,7 +15,6 @@ import '../core/utils/security_helper.dart';
 import 'home_screen_wrapper.dart';
 import 'teacher/teacher_dashboard_wrapper.dart';
 
-/// Login mode
 enum LoginMode { signIn, signUp }
 
 class LoginScreen extends StatefulWidget {
@@ -27,26 +26,23 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
-  // Controllers
+
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _confirmPassCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  // State
   bool _loading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   String _selectedLang = 'en';
   String? _errorMessage;
   LoginMode _mode = LoginMode.signIn;
-  String _selectedRole = 'student'; // 'student' or 'teacher'
+  String _selectedRole = 'student';
 
-  // Services
   final _authService = FirebaseAuthService.instance;
   final _connectivityService = ConnectivityService.instance;
 
-  // Animation
   late AnimationController _animController;
   late Animation<double> _fadeAnimation;
   bool _isLanguageLoaded = false;
@@ -94,7 +90,6 @@ class _LoginScreenState extends State<LoginScreen>
     final scope = AppLanguageScope.maybeOf(context);
     scope?.setLanguage(code);
 
-    // Save language to SharedPreferences to persist across screens
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('language_code', code);
@@ -123,11 +118,9 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
-  /// Handle login/signup with Firebase
   Future<void> _handleAuth() async {
     _clearError();
 
-    // Rate limiting - prevent brute force
     final email = _emailCtrl.text.trim();
     if (!SecurityHelper.checkRateLimit('auth_$email',
         cooldown: const Duration(seconds: 3))) {
@@ -135,27 +128,22 @@ class _LoginScreenState extends State<LoginScreen>
       return;
     }
 
-    // Validate form
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
 
-    // Check connectivity
     if (!_connectivityService.isOnline) {
       _showError('No internet connection. Please check your network.');
       return;
     }
 
-    // Sanitize email input
     final sanitizedEmail = SecurityHelper.sanitizeInput(email);
 
-    // Additional email validation
     if (!SecurityHelper.isValidEmail(sanitizedEmail)) {
       _showError('Please enter a valid email address');
       return;
     }
 
-    // Check for SQL injection attempts
     if (SecurityHelper.containsSQLInjection(sanitizedEmail) ||
         SecurityHelper.containsSQLInjection(_passCtrl.text)) {
       SecurityHelper.logSecurityEvent('Login injection attempt', details: {
@@ -163,21 +151,19 @@ class _LoginScreenState extends State<LoginScreen>
       });
       _showError('Invalid input detected');
       return;
-    } // Validate password match for signup
+    }
     if (_mode == LoginMode.signUp && _passCtrl.text != _confirmPassCtrl.text) {
       _showError('Passwords do not match');
       return;
     }
 
-    // Validate password strength for signup
     if (_mode == LoginMode.signUp) {
-      // Check weak passwords
+
       if (SecurityHelper.isWeakPassword(_passCtrl.text)) {
         _showError('Password is too weak. Please choose a stronger password.');
         return;
       }
 
-      // Check password strength
       final strength = SecurityHelper.checkPasswordStrength(_passCtrl.text);
       if (strength == PasswordStrength.weak) {
         _showError('Password is too weak. ${strength.description}');
@@ -226,7 +212,6 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
-  /// Continue as guest
   Future<void> _continueAsGuest() async {
     _clearError();
     setState(() => _loading = true);
@@ -237,7 +222,7 @@ class _LoginScreenState extends State<LoginScreen>
       if (!mounted) return;
 
       if (result.isSuccess) {
-        // Save role and navigate based on selection
+
         await _navigateToHome();
       } else {
         _showError(result.error?.message ?? 'Failed to continue as guest');
@@ -252,7 +237,6 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
-  /// Sign in with Google
   Future<void> _signInWithGoogle() async {
     if (!_connectivityService.isOnline) {
       _showError('No internet connection');
@@ -268,7 +252,7 @@ class _LoginScreenState extends State<LoginScreen>
       if (!mounted) return;
 
       if (result.isSuccess && result.data != null) {
-        // Save role and navigate based on selection
+
         await _navigateToHome();
       } else {
         final error = result.error;
@@ -288,7 +272,6 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
-  /// Send password reset email
   Future<void> _forgotPassword() async {
     final email = _emailCtrl.text.trim();
     if (email.isEmpty) {
@@ -347,7 +330,7 @@ class _LoginScreenState extends State<LoginScreen>
     }
 
     if (mounted) {
-      // Navigate based on selected role
+
       final Widget destination = _selectedRole == 'teacher'
           ? const TeacherDashboardWrapper()
           : const HomeScreenWrapper();
@@ -374,7 +357,6 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -382,33 +364,64 @@ class _LoginScreenState extends State<LoginScreen>
         opacity: _fadeAnimation,
         child: Stack(
           children: [
-            // Offline indicator
+
             if (!_connectivityService.isOnline)
               Positioned(
                 top: MediaQuery.of(context).padding.top + 12,
                 left: 16,
-                child: _buildOfflineIndicator(isDark),
+                child: _buildOfflineIndicator(),
               ),
 
-            // Main content
             Center(
               child: SingleChildScrollView(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                 child: Column(
                   children: [
-                    // App title
+
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppColors.salmon, AppColors.primary],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.salmon.withAlpha(128),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.school_rounded,
+                        color: Colors.white,
+                        size: 48,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
                     Text(
                       t(context, 'app.title'),
                       style: AppTextStyles.wordmark.copyWith(
                         fontSize: 32,
-                        color: isDark ? AppColors.textDarkMode : Colors.black87,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '📚 Learn Anywhere, Anytime',
+                      style: AppTextStyles.body.copyWith(
+                        color: AppColors.textLight,
+                        fontSize: 15,
                       ),
                     ),
                     const SizedBox(height: 32),
 
-                    // Login card
-                    _buildLoginCard(size, isDark),
+                    _buildLoginCard(size),
                   ],
                 ),
               ),
@@ -419,7 +432,7 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildOfflineIndicator(bool isDark) {
+  Widget _buildOfflineIndicator() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -441,7 +454,7 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildLoginCard(Size size, bool isDark) {
+  Widget _buildLoginCard(Size size) {
     return Container(
       constraints: BoxConstraints(
         maxWidth: size.width > 420 ? 420 : size.width,
@@ -450,7 +463,7 @@ class _LoginScreenState extends State<LoginScreen>
         borderRadius: BorderRadius.circular(36),
         boxShadow: [
           BoxShadow(
-            color: (isDark ? Colors.black : AppColors.salmon).withAlpha(51),
+            color: AppColors.salmon.withAlpha(51),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
@@ -463,14 +476,10 @@ class _LoginScreenState extends State<LoginScreen>
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.cardDark.withAlpha(230)
-                  : Colors.white.withAlpha(230),
+              color: Colors.white.withAlpha(245),
               borderRadius: BorderRadius.circular(36),
               border: Border.all(
-                color: isDark
-                    ? AppColors.salmonDark.withAlpha(77)
-                    : Colors.white.withAlpha(179),
+                color: Colors.white.withAlpha(179),
                 width: 1.2,
               ),
             ),
@@ -479,98 +488,88 @@ class _LoginScreenState extends State<LoginScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title
-                  Text(
-                    _mode == LoginMode.signIn
-                        ? t(context, 'login.title')
-                        : 'Create Account',
-                    style: AppTextStyles.headline.copyWith(
-                      color: isDark ? AppColors.textDarkMode : Colors.black87,
-                    ),
+
+                  Row(
+                    children: [
+                      Text(
+                        _mode == LoginMode.signIn ? '👋 ' : '✨ ',
+                        style: const TextStyle(fontSize: 28),
+                      ),
+                      Text(
+                        _mode == LoginMode.signIn
+                            ? t(context, 'login.title')
+                            : 'Create Account',
+                        style: AppTextStyles.headline.copyWith(
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
 
-                  // Language selector
                   Text(
                     t(context, 'login.language'),
                     style: AppTextStyles.body.copyWith(
                       fontSize: 13,
-                      color: isDark ? AppColors.textLightDark : Colors.black87,
+                      color: AppColors.textLight,
                     ),
                   ),
                   const SizedBox(height: 6),
-                  _buildLanguageRow(isDark),
+                  _buildLanguageRow(),
                   const SizedBox(height: 16),
 
-                  // Role selection
                   Text(
-                    'Select Role',
+                    '🎓 Select Role',
                     style: AppTextStyles.body.copyWith(
                       fontSize: 13,
-                      color: isDark ? AppColors.textLightDark : Colors.black87,
+                      color: AppColors.textLight,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
-                        child: RadioListTile<String>(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Student'),
-                          value: 'student',
-                          groupValue: _selectedRole,
-                          activeColor:
-                              isDark ? AppColors.salmonDark : AppColors.salmon,
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedRole = value!;
-                            });
-                          },
+                        child: _buildRoleCard(
+                          'student',
+                          '👨‍🎓',
+                          'Student',
+                          AppColors.secondary,
                         ),
                       ),
+                      const SizedBox(width: 12),
                       Expanded(
-                        child: RadioListTile<String>(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Teacher'),
-                          value: 'teacher',
-                          groupValue: _selectedRole,
-                          activeColor:
-                              isDark ? AppColors.salmonDark : AppColors.salmon,
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedRole = value!;
-                            });
-                          },
+                        child: _buildRoleCard(
+                          'teacher',
+                          '👩‍🏫',
+                          'Teacher',
+                          AppColors.lavender,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
 
-                  // Error message
                   if (_errorMessage != null) ...[
-                    _buildErrorBanner(isDark),
+                    _buildErrorBanner(),
                     const SizedBox(height: 12),
                   ],
 
-                  // Email field
                   TextFormField(
                     controller: _emailCtrl,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     enabled: !_loading,
-                    style: TextStyle(
-                      color: isDark ? AppColors.textDarkMode : Colors.black87,
+                    style: const TextStyle(
+                      color: AppColors.textDark,
                     ),
                     decoration: InputDecoration(
                       labelText: t(context, 'login.email'),
-                      labelStyle: TextStyle(
-                        color:
-                            isDark ? AppColors.textLightDark : Colors.black54,
+                      labelStyle: const TextStyle(
+                        color: AppColors.textLight,
                       ),
-                      prefixIcon: Icon(
+                      prefixIcon: const Icon(
                         Icons.email_outlined,
-                        color: isDark ? AppColors.salmonDark : AppColors.salmon,
+                        color: AppColors.salmon,
                       ),
                     ),
                     validator: (value) {
@@ -586,7 +585,6 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                   const SizedBox(height: 14),
 
-                  // Password field
                   TextFormField(
                     controller: _passCtrl,
                     obscureText: _obscurePassword,
@@ -594,26 +592,24 @@ class _LoginScreenState extends State<LoginScreen>
                         ? TextInputAction.next
                         : TextInputAction.done,
                     enabled: !_loading,
-                    style: TextStyle(
-                      color: isDark ? AppColors.textDarkMode : Colors.black87,
+                    style: const TextStyle(
+                      color: AppColors.textDark,
                     ),
                     decoration: InputDecoration(
                       labelText: t(context, 'login.password'),
-                      labelStyle: TextStyle(
-                        color:
-                            isDark ? AppColors.textLightDark : Colors.black54,
+                      labelStyle: const TextStyle(
+                        color: AppColors.textLight,
                       ),
-                      prefixIcon: Icon(
+                      prefixIcon: const Icon(
                         Icons.lock_outline,
-                        color: isDark ? AppColors.salmonDark : AppColors.salmon,
+                        color: AppColors.salmon,
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
                               ? Icons.visibility_off
                               : Icons.visibility,
-                          color:
-                              isDark ? AppColors.textLightDark : Colors.black54,
+                          color: AppColors.textLight,
                         ),
                         onPressed: () => setState(
                             () => _obscurePassword = !_obscurePassword),
@@ -636,7 +632,6 @@ class _LoginScreenState extends State<LoginScreen>
                     },
                   ),
 
-                  // Confirm password (signup only)
                   if (_mode == LoginMode.signUp) ...[
                     const SizedBox(height: 14),
                     TextFormField(
@@ -644,28 +639,24 @@ class _LoginScreenState extends State<LoginScreen>
                       obscureText: _obscureConfirmPassword,
                       textInputAction: TextInputAction.done,
                       enabled: !_loading,
-                      style: TextStyle(
-                        color: isDark ? AppColors.textDarkMode : Colors.black87,
+                      style: const TextStyle(
+                        color: AppColors.textDark,
                       ),
                       decoration: InputDecoration(
                         labelText: 'Confirm Password',
-                        labelStyle: TextStyle(
-                          color:
-                              isDark ? AppColors.textLightDark : Colors.black54,
+                        labelStyle: const TextStyle(
+                          color: AppColors.textLight,
                         ),
-                        prefixIcon: Icon(
+                        prefixIcon: const Icon(
                           Icons.lock_outline,
-                          color:
-                              isDark ? AppColors.salmonDark : AppColors.salmon,
+                          color: AppColors.salmon,
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscureConfirmPassword
                                 ? Icons.visibility_off
                                 : Icons.visibility,
-                            color: isDark
-                                ? AppColors.textLightDark
-                                : Colors.black54,
+                            color: AppColors.textLight,
                           ),
                           onPressed: () => setState(() =>
                               _obscureConfirmPassword =
@@ -687,19 +678,16 @@ class _LoginScreenState extends State<LoginScreen>
                     ),
                   ],
 
-                  // Forgot password (sign in only)
                   if (_mode == LoginMode.signIn) ...[
                     const SizedBox(height: 8),
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: _loading ? null : _forgotPassword,
-                        child: Text(
+                        child: const Text(
                           'Forgot Password?',
                           style: TextStyle(
-                            color: isDark
-                                ? AppColors.salmonDark
-                                : AppColors.salmon,
+                            color: AppColors.salmon,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -709,7 +697,6 @@ class _LoginScreenState extends State<LoginScreen>
 
                   const SizedBox(height: 20),
 
-                  // Login/Signup button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -730,7 +717,6 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                   const SizedBox(height: 8),
 
-                  // Toggle mode button
                   SizedBox(
                     width: double.infinity,
                     child: TextButton(
@@ -739,50 +725,41 @@ class _LoginScreenState extends State<LoginScreen>
                         _mode == LoginMode.signIn
                             ? "Don't have an account? Sign Up"
                             : 'Already have an account? Sign In',
-                        style: TextStyle(
-                          color:
-                              isDark ? AppColors.textLightDark : Colors.black87,
+                        style: const TextStyle(
+                          color: AppColors.textDark,
                         ),
                       ),
                     ),
                   ),
 
-                  // Divider
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Row(
                       children: [
                         Expanded(
                           child: Divider(
-                            color: isDark
-                                ? AppColors.textLightDark.withAlpha(77)
-                                : Colors.black26,
+                            color: Colors.black26,
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
                           child: Text(
                             'OR',
                             style: TextStyle(
-                              color: isDark
-                                  ? AppColors.textLightDark
-                                  : Colors.black54,
+                              color: AppColors.textLight,
                               fontSize: 12,
                             ),
                           ),
                         ),
                         Expanded(
                           child: Divider(
-                            color: isDark
-                                ? AppColors.textLightDark.withAlpha(77)
-                                : Colors.black26,
+                            color: Colors.black26,
                           ),
                         ),
                       ],
                     ),
                   ),
 
-                  // Google Sign-In button
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
@@ -797,22 +774,18 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                       label: const Text('Sign in with Google'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor:
-                            isDark ? AppColors.textDarkMode : Colors.black87,
-                        side: BorderSide(
-                          color:
-                              isDark ? AppColors.textLightDark : Colors.black38,
+                        foregroundColor: AppColors.textDark,
+                        side: const BorderSide(
+                          color: Colors.black38,
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        backgroundColor:
-                            isDark ? Colors.transparent : Colors.white,
+                        backgroundColor: Colors.white,
                       ),
                     ),
                   ),
 
                   const SizedBox(height: 12),
 
-                  // Guest button
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
@@ -820,11 +793,9 @@ class _LoginScreenState extends State<LoginScreen>
                       icon: const Icon(Icons.person_outline),
                       label: Text(t(context, 'login.guest')),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor:
-                            isDark ? AppColors.textDarkMode : Colors.black87,
-                        side: BorderSide(
-                          color:
-                              isDark ? AppColors.textLightDark : Colors.black38,
+                        foregroundColor: AppColors.textDark,
+                        side: const BorderSide(
+                          color: Colors.black38,
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
@@ -839,7 +810,48 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildErrorBanner(bool isDark) {
+  Widget _buildRoleCard(String role, String emoji, String label, Color color) {
+    final selected = _selectedRole == role;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedRole = role),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: selected ? color : color.withAlpha(51),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? color : color.withAlpha(128),
+            width: selected ? 2 : 1,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: color.withAlpha(77),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 28)),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: selected ? Colors.white : AppColors.textDark,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorBanner() {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -866,19 +878,19 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildLanguageRow(bool isDark) {
+  Widget _buildLanguageRow() {
     return Row(
       children: [
-        _languageChip("en", "English", isDark),
+        _languageChip("en", "🇬🇧 English"),
         const SizedBox(width: 8),
-        _languageChip("hi", "हिन्दी", isDark),
+        _languageChip("hi", "🇮🇳 हिन्दी"),
         const SizedBox(width: 8),
-        _languageChip("pa", "ਪੰਜਾਬੀ", isDark),
+        _languageChip("pa", "ਪੰਜਾਬੀ"),
       ],
     );
   }
 
-  Widget _languageChip(String code, String label, bool isDark) {
+  Widget _languageChip(String code, String label) {
     final bool selected = _selectedLang == code;
     return GestureDetector(
       onTap: () => _setLanguage(code),
@@ -886,24 +898,15 @@ class _LoginScreenState extends State<LoginScreen>
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selected
-              ? (isDark ? AppColors.salmonDark : AppColors.salmon)
-              : (isDark
-                  ? AppColors.mintDark.withAlpha(77)
-                  : AppColors.mint.withAlpha(128)),
+          color: selected ? AppColors.salmon : AppColors.mint.withAlpha(128),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected
-                ? (isDark ? AppColors.salmonDark : AppColors.salmon)
-                : (isDark
-                    ? AppColors.mintDark.withAlpha(102)
-                    : Colors.white.withAlpha(153)),
+            color: selected ? AppColors.salmon : Colors.white.withAlpha(153),
           ),
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: (isDark ? AppColors.salmonDark : AppColors.salmon)
-                        .withAlpha(77),
+                    color: AppColors.salmon.withAlpha(77),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -913,9 +916,7 @@ class _LoginScreenState extends State<LoginScreen>
         child: Text(
           label,
           style: TextStyle(
-            color: selected
-                ? Colors.white
-                : (isDark ? AppColors.textDarkMode : Colors.black87),
+            color: selected ? Colors.white : AppColors.textDark,
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),

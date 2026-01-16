@@ -1,4 +1,4 @@
-/// Firebase Configuration for SIH 2025 Project
+
 library;
 
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
@@ -39,8 +39,6 @@ class DefaultFirebaseOptions {
     storageBucket: 'sih-2025-4e10d.firebasestorage.app',
   );
 
-  // iOS configuration - Run `flutterfire configure` to generate actual credentials
-  // These are placeholder values that will work for development but should be updated for production
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBA_NA-BHXPc8foHV5oiZNOnk8jBr9QJ-Y',
     appId: '1:810050677328:ios:a1c6fd4da6c16d4760bf55',
@@ -50,8 +48,6 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.ai.app',
   );
 
-  // Web configuration - uses same project credentials
-  // For production, generate proper web app credentials in Firebase Console
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyBA_NA-BHXPc8foHV5oiZNOnk8jBr9QJ-Y',
     appId: '1:810050677328:web:a1c6fd4da6c16d4760bf55',
@@ -61,7 +57,6 @@ class DefaultFirebaseOptions {
     storageBucket: 'sih-2025-4e10d.firebasestorage.app',
   );
 
-  // macOS configuration - Uses same credentials as iOS for development
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyBA_NA-BHXPc8foHV5oiZNOnk8jBr9QJ-Y',
     appId: '1:810050677328:macos:a1c6fd4da6c16d4760bf55',
@@ -71,7 +66,6 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.ai.app',
   );
 
-  // Windows configuration - Uses Android credentials for development
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyBA_NA-BHXPc8foHV5oiZNOnk8jBr9QJ-Y',
     appId: '1:810050677328:windows:a1c6fd4da6c16d4760bf55',

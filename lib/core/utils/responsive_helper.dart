@@ -1,23 +1,20 @@
-/// Tablet & Large Screen Optimization Utilities
-/// Provides responsive layout helpers for tablets and desktop
+
+
 library;
 
 import 'package:flutter/material.dart';
 
-/// Device size categories
 enum DeviceType {
-  mobile, // < 600dp
-  tablet, // 600-840dp
-  desktop, // > 840dp
+  mobile,
+  tablet,
+  desktop,
 }
 
-/// Screen breakpoints
 class ScreenBreakpoints {
   static const double mobileMax = 600;
   static const double tabletMax = 840;
   static const double desktopMin = 841;
 
-  /// Get device type based on screen width
   static DeviceType getDeviceType(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     if (width < mobileMax) return DeviceType.mobile;
@@ -25,17 +22,14 @@ class ScreenBreakpoints {
     return DeviceType.desktop;
   }
 
-  /// Check if device is tablet or larger
   static bool isTabletOrLarger(BuildContext context) {
     return getDeviceType(context) != DeviceType.mobile;
   }
 
-  /// Check if device is desktop
   static bool isDesktop(BuildContext context) {
     return getDeviceType(context) == DeviceType.desktop;
   }
 
-  /// Get responsive padding
   static EdgeInsets getResponsivePadding(BuildContext context) {
     final deviceType = getDeviceType(context);
     switch (deviceType) {
@@ -48,7 +42,6 @@ class ScreenBreakpoints {
     }
   }
 
-  /// Get responsive font scale
   static double getResponsiveFontScale(BuildContext context) {
     final deviceType = getDeviceType(context);
     switch (deviceType) {
@@ -61,16 +54,14 @@ class ScreenBreakpoints {
     }
   }
 
-  /// Get responsive column count for grid
   static int getGridColumnCount(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    if (width < 600) return 2; // Mobile: 2 columns
-    if (width < 900) return 3; // Tablet portrait: 3 columns
-    if (width < 1200) return 4; // Tablet landscape: 4 columns
-    return 5; // Desktop: 5 columns
+    if (width < 600) return 2;
+    if (width < 900) return 3;
+    if (width < 1200) return 4;
+    return 5;
   }
 
-  /// Get responsive max width for content
   static double getContentMaxWidth(BuildContext context) {
     final deviceType = getDeviceType(context);
     switch (deviceType) {
@@ -84,7 +75,6 @@ class ScreenBreakpoints {
   }
 }
 
-/// Responsive widget builder
 class ResponsiveBuilder extends StatelessWidget {
   final Widget Function(BuildContext context, DeviceType deviceType) builder;
 
@@ -97,7 +87,6 @@ class ResponsiveBuilder extends StatelessWidget {
   }
 }
 
-/// Responsive layout widget
 class ResponsiveLayout extends StatelessWidget {
   final Widget mobile;
   final Widget? tablet;
@@ -125,7 +114,6 @@ class ResponsiveLayout extends StatelessWidget {
   }
 }
 
-/// Responsive grid view
 class ResponsiveGrid extends StatelessWidget {
   final List<Widget> children;
   final double childAspectRatio;
@@ -156,7 +144,6 @@ class ResponsiveGrid extends StatelessWidget {
   }
 }
 
-/// Centered content with max width
 class CenteredContent extends StatelessWidget {
   final Widget child;
   final double? maxWidth;
@@ -180,7 +167,6 @@ class CenteredContent extends StatelessWidget {
   }
 }
 
-/// Adaptive text size
 class AdaptiveText extends StatelessWidget {
   final String text;
   final TextStyle? style;

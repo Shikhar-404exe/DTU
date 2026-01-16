@@ -1,5 +1,6 @@
-/// Voice Service (TTS & STT)
-/// Handles text-to-speech and speech-to-text operations
+
+
+library;
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -13,7 +14,6 @@ class VoiceService {
   static bool _ttsInitialized = false;
   static bool _sttInitialized = false;
 
-  // TTS Methods
   static Future<void> initTTS() async {
     if (_ttsInitialized) return;
 
@@ -37,7 +37,6 @@ class VoiceService {
   }) async {
     await initTTS();
 
-    // Try online TTS first if requested
     if (useOnline) {
       final onlineResult = await _speakOnline(
         text: text,
@@ -48,7 +47,6 @@ class VoiceService {
       if (onlineResult) return true;
     }
 
-    // Fallback to device TTS
     return await _speakDevice(
       text: text,
       language: language,
@@ -82,8 +80,7 @@ class VoiceService {
         final data = jsonDecode(response.body);
 
         if (data['success'] && data['provider'] == 'google_cloud') {
-          // Got online audio - would need audio player to play base64 MP3
-          // For now, fallback to device TTS
+
           return false;
         }
       }
@@ -101,14 +98,14 @@ class VoiceService {
     required double pitch,
   }) async {
     try {
-      // Map language codes
+
       String deviceLang = language;
       if (language == 'en') deviceLang = 'en-IN';
       if (language == 'hi') deviceLang = 'hi-IN';
       if (language == 'pa') deviceLang = 'pa-IN';
 
       await _flutterTts.setLanguage(deviceLang);
-      await _flutterTts.setSpeechRate(speed * 0.5); // Adjust for device
+      await _flutterTts.setSpeechRate(speed * 0.5);
       await _flutterTts.setPitch(pitch);
 
       await _flutterTts.speak(text);
@@ -149,7 +146,6 @@ class VoiceService {
     }
   }
 
-  // STT Methods
   static Future<bool> initSTT() async {
     if (_sttInitialized) return true;
 
@@ -194,7 +190,6 @@ class VoiceService {
       cancelOnError: true,
     );
 
-    // Wait for result or timeout
     await Future.delayed(timeout);
     return finalResult;
   }
@@ -233,7 +228,6 @@ class VoiceService {
     return await _speech.locales();
   }
 
-  // Health check
   static Future<bool> checkTTSHealth() async {
     try {
       final response = await http

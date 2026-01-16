@@ -1,6 +1,5 @@
-/// Privacy Consent Screen
-/// GDPR/DPDP Act compliant consent collection UI
-/// Must be shown before collecting any user data
+
+
 library;
 
 import 'package:flutter/material.dart';
@@ -43,7 +42,7 @@ class _PrivacyConsentScreenState extends State<PrivacyConsentScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -102,18 +101,16 @@ class _PrivacyConsentScreenState extends State<PrivacyConsentScreen> {
               ),
             ),
 
-            // Content
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Compliance badges
+
                     _buildComplianceBadges(isDark),
                     const SizedBox(height: 24),
 
-                    // Data collection summary
                     _buildSection(
                       isDark: isDark,
                       title: 'What Data We Collect',
@@ -122,7 +119,6 @@ class _PrivacyConsentScreenState extends State<PrivacyConsentScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Consent options
                     _buildSection(
                       isDark: isDark,
                       title: 'Your Consent Choices',
@@ -131,7 +127,6 @@ class _PrivacyConsentScreenState extends State<PrivacyConsentScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Age verification
                     _buildSection(
                       isDark: isDark,
                       title: 'Age Verification',
@@ -140,7 +135,6 @@ class _PrivacyConsentScreenState extends State<PrivacyConsentScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Your rights
                     _buildSection(
                       isDark: isDark,
                       title: 'Your Rights',
@@ -149,15 +143,13 @@ class _PrivacyConsentScreenState extends State<PrivacyConsentScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Policy acknowledgment
                     _buildPolicyAcknowledgment(isDark),
-                    const SizedBox(height: 100), // Space for buttons
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
             ),
 
-            // Bottom buttons
             _buildBottomButtons(isDark),
           ],
         ),
@@ -796,7 +788,7 @@ class _PrivacyConsentScreenState extends State<PrivacyConsentScreen> {
   }
 
   Future<void> _openPrivacyPolicy() async {
-    // Replace with your actual privacy policy URL
+
     const url = 'https://vidyarthi-app.com/privacy-policy';
     try {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
@@ -810,7 +802,7 @@ class _PrivacyConsentScreenState extends State<PrivacyConsentScreen> {
   }
 
   Future<void> _openTermsOfService() async {
-    // Replace with your actual terms URL
+
     const url = 'https://vidyarthi-app.com/terms';
     try {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);

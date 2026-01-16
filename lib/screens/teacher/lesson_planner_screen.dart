@@ -1,10 +1,11 @@
-/// Lesson Planner Screen - Teacher Dashboard
-/// Create and manage lesson plans with optional AI summaries
+
+
+library;
 
 import 'package:flutter/material.dart';
 import '../../main.dart';
 import '../../services/teacher_data_service.dart';
-import '../../services/gemini_service.dart';
+import '../../services/openrouter_service.dart';
 import '../../models/teacher_models.dart';
 
 class LessonPlannerScreen extends StatefulWidget {
@@ -262,7 +263,7 @@ class _LessonEditorScreenState extends State<_LessonEditorScreen> {
     setState(() => _generatingSummary = true);
 
     try {
-      final result = await GeminiService.summarizeText(
+      final result = await OpenRouterService.summarizeText(
         text: _notesController.text,
       ).timeout(const Duration(seconds: 30));
 
@@ -362,7 +363,7 @@ class _LessonEditorScreenState extends State<_LessonEditorScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               DropdownButtonFormField<String>(
-                value: _selectedClassId,
+                initialValue: _selectedClassId,
                 decoration: InputDecoration(
                   labelText: 'Class',
                   border: OutlineInputBorder(

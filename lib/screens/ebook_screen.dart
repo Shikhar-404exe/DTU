@@ -1,7 +1,4 @@
-// lib/screens/ebook_screen.dart
-// Improved NCERT E-Book downloader using embedded WebView,
-// extract PDF links from current page, allow selection and download,
-// then register as "ebook" in StorageService so it shows under Saved Notes -> 📚 E-Books.
+
 
 import 'dart:async';
 import 'dart:convert';
@@ -31,7 +28,6 @@ class _EbookScreenState extends State<EbookScreen> {
   bool _downloading = false;
   String _currentSource = "NCERT";
 
-  // Government E-Book Sources
   static const Map<String, String> _sources = {
     "NCERT": "https://ncert.nic.in/textbook.php",
     "e-Pathshala": "https://epathshala.nic.in/",
@@ -51,11 +47,11 @@ class _EbookScreenState extends State<EbookScreen> {
         NavigationDelegate(
           onPageStarted: (_) => setState(() => _loading = true),
           onPageFinished: (_) => setState(() => _loading = false),
-          // Intercept PDF downloads directly
+
           onNavigationRequest: (request) {
             final url = request.url.toLowerCase();
             if (url.endsWith('.pdf')) {
-              // Download the PDF instead of navigating to it
+
               _downloadPdf(request.url);
               return NavigationDecision.prevent;
             }
@@ -74,9 +70,8 @@ class _EbookScreenState extends State<EbookScreen> {
     }
   }
 
-  /// Extract PDF links from the currently loaded page and present them.
   Future<void> _extractPdfLinks() async {
-    // JS returns a JSON string of array of pdf links
+
     const js = """
       (function(){
         const links = Array.from(document.querySelectorAll('a'))
@@ -89,15 +84,14 @@ class _EbookScreenState extends State<EbookScreen> {
     try {
       final raw = await _controller.runJavaScriptReturningResult(js);
 
-      // Handle different WebView return types
       List<String> links = [];
 
       if (raw is String) {
-        // Remove surrounding quotes if present (WebView often returns '"[...]"')
+
         String str = raw;
         if (str.startsWith('"') && str.endsWith('"')) {
           str = str.substring(1, str.length - 1);
-          // Unescape inner quotes
+
           str = str.replaceAll(r'\"', '"');
         }
 
@@ -107,7 +101,7 @@ class _EbookScreenState extends State<EbookScreen> {
             links = decoded.map((e) => e.toString()).toList();
           }
         } catch (_) {
-          // If JSON fails, try to extract URLs directly
+
           final urlPattern =
               RegExp(r'https?://[^\s"]+\.pdf', caseSensitive: false);
           links = urlPattern.allMatches(str).map((m) => m.group(0)!).toList();
@@ -116,7 +110,6 @@ class _EbookScreenState extends State<EbookScreen> {
         links = raw.map((e) => e.toString()).toList();
       }
 
-      // Remove duplicates
       links = links.toSet().toList();
 
       if (links.isEmpty) {
@@ -131,7 +124,6 @@ class _EbookScreenState extends State<EbookScreen> {
 
       if (!mounted) return;
 
-      // Show selection dialog
       final selected = await showDialog<String>(
         context: context,
         builder: (ctx) {
@@ -213,7 +205,6 @@ class _EbookScreenState extends State<EbookScreen> {
       final file = File(savePath);
       await file.writeAsBytes(res.bodyBytes, flush: true);
 
-      // Save metadata into StorageService as ebook note
       final notes = await StorageService.loadNotes();
       notes.add({
         "v": 1,
@@ -242,7 +233,6 @@ class _EbookScreenState extends State<EbookScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Wrap with gradient background so UI matches rest of app when pushed
     return GradientBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -272,7 +262,7 @@ class _EbookScreenState extends State<EbookScreen> {
         ),
         body: Column(
           children: [
-            // Source selector chips
+
             Container(
               height: 50,
               margin: const EdgeInsets.only(bottom: 8),
@@ -300,8 +290,8 @@ class _EbookScreenState extends State<EbookScreen> {
                       selectedColor:
                           isDark ? AppColors.salmonDark : AppColors.salmon,
                       backgroundColor: isDark
-                          ? AppColors.cardDark.withAlpha(204) // ~0.8 opacity
-                          : Colors.white.withAlpha(230), // ~0.9 opacity
+                          ? AppColors.cardDark.withAlpha(204)
+                          : Colors.white.withAlpha(230),
                       checkmarkColor: Colors.white,
                       onSelected: (_) {
                         setState(() {
@@ -317,7 +307,6 @@ class _EbookScreenState extends State<EbookScreen> {
               ),
             ),
 
-            // URL bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               child: Row(
@@ -326,12 +315,12 @@ class _EbookScreenState extends State<EbookScreen> {
                     child: Container(
                       decoration: BoxDecoration(
                         color: isDark
-                            ? AppColors.cardDark.withAlpha(230) // ~0.9 opacity
+                            ? AppColors.cardDark.withAlpha(230)
                             : Colors.white.withAlpha(230),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withAlpha(26), // ~0.1 opacity
+                            color: Colors.black.withAlpha(26),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -374,7 +363,7 @@ class _EbookScreenState extends State<EbookScreen> {
                         BoxShadow(
                           color:
                               (isDark ? AppColors.salmonDark : AppColors.salmon)
-                                  .withAlpha(102), // ~0.4 opacity
+                                  .withAlpha(102),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -392,7 +381,6 @@ class _EbookScreenState extends State<EbookScreen> {
 
             const SizedBox(height: 8),
 
-            // Webview
             Expanded(
               child: Container(
                 margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
@@ -401,7 +389,7 @@ class _EbookScreenState extends State<EbookScreen> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withAlpha(38), // ~0.15 opacity
+                      color: Colors.black.withAlpha(38),
                       blurRadius: 15,
                       offset: const Offset(0, 5),
                     ),
@@ -414,7 +402,7 @@ class _EbookScreenState extends State<EbookScreen> {
                       WebViewWidget(controller: _controller),
                       if (_loading)
                         Container(
-                          color: Colors.white.withAlpha(204), // ~0.8 opacity
+                          color: Colors.white.withAlpha(204),
                           child: const Center(
                             child: CircularProgressIndicator(),
                           ),
@@ -434,7 +422,7 @@ class _EbookScreenState extends State<EbookScreen> {
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black
-                                      .withAlpha(51), // ~0.2 opacity
+                                      .withAlpha(51),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -468,7 +456,6 @@ class _EbookScreenState extends State<EbookScreen> {
               ),
             ),
 
-            // Help text
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(

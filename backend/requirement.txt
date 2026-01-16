@@ -1,0 +1,43 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+google-generativeai
+requests
+pydantic[email]
+email-validator
+openai>=1.0.0
+
+# Security & Authentication
+bcrypt>=4.0.1
+passlib[bcrypt]>=1.7.4
+
+# Database
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.9
+alembic>=1.13.0
+
+# Rate Limiting
+slowapi>=0.1.9
+
+# Logging & Monitoring
+sentry-sdk[fastapi]>=1.39.0
+python-json-logger>=2.0.7
+
+# SSL/HTTPS
+cryptography>=41.0.0
+
+# Custom Tools Dependencies
+numpy>=1.24.0
+aiosqlite>=0.19.0
+
+# Firebase Cloud Messaging
+google-auth>=2.23.4
+google-auth-httplib2>=0.1.1
+google-auth-oauthlib>=1.1.0
+
+# PhotoMath Agent Dependencies
+pytesseract>=0.3.10
+sympy>=1.12
+opencv-python>=4.8.0
+Pillow>=10.0.0
+python-multipart>=0.0.6

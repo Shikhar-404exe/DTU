@@ -1,4 +1,5 @@
-/// Marks Management Screen - Add and manage student marks for different subjects
+
+library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -71,7 +72,7 @@ class _MarksManagementScreenState extends State<MarksManagementScreen> {
     );
 
     if (result != null) {
-      // Update student marks
+
       final index = _students.indexWhere((s) => s.id == student.id);
       if (index >= 0) {
         _students[index] = student.copyWith(marks: result);
@@ -113,7 +114,7 @@ class _MarksManagementScreenState extends State<MarksManagementScreen> {
                 )
               : Column(
                   children: [
-                    // Class Selector
+
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Container(
@@ -146,7 +147,6 @@ class _MarksManagementScreenState extends State<MarksManagementScreen> {
                       ),
                     ),
 
-                    // Student List with Marks
                     Expanded(
                       child: _filteredStudents.isEmpty
                           ? Center(

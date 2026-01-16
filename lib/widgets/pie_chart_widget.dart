@@ -1,5 +1,6 @@
-/// Custom Pie Chart Widget for Analytics
-/// Displays data as a pie chart with labels and percentages
+
+
+library;
 
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -120,12 +121,11 @@ class _PieChartPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = math.min(size.width, size.height) / 2;
 
-    double startAngle = -math.pi / 2; // Start from top
+    double startAngle = -math.pi / 2;
 
     for (final item in data) {
       final sweepAngle = (item.value / total) * 2 * math.pi;
 
-      // Draw pie slice
       final paint = Paint()
         ..color = item.color
         ..style = PaintingStyle.fill;
@@ -138,7 +138,6 @@ class _PieChartPainter extends CustomPainter {
         paint,
       );
 
-      // Draw border between slices
       final borderPaint = Paint()
         ..color = Colors.white
         ..style = PaintingStyle.stroke
@@ -160,7 +159,6 @@ class _PieChartPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-/// Donut Chart Widget - Pie chart with center cutout
 class DonutChartWidget extends StatelessWidget {
   final List<PieChartData> data;
   final double size;
@@ -258,28 +256,25 @@ class _DonutChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = math.min(size.width, size.height) / 2;
-    final innerRadius = radius * 0.6; // 60% of outer radius for donut hole
+    final innerRadius = radius * 0.6;
 
-    double startAngle = -math.pi / 2; // Start from top
+    double startAngle = -math.pi / 2;
 
     for (final item in data) {
       final sweepAngle = (item.value / total) * 2 * math.pi;
 
-      // Draw outer arc
       final paint = Paint()
         ..color = item.color
         ..style = PaintingStyle.fill;
 
       final path = Path();
 
-      // Outer arc
       path.addArc(
         Rect.fromCircle(center: center, radius: radius),
         startAngle,
         sweepAngle,
       );
 
-      // Inner arc (reverse direction)
       final endAngle = startAngle + sweepAngle;
       path.lineTo(
         center.dx + innerRadius * math.cos(endAngle),
@@ -296,7 +291,6 @@ class _DonutChartPainter extends CustomPainter {
 
       canvas.drawPath(path, paint);
 
-      // Draw border
       final borderPaint = Paint()
         ..color = Colors.white
         ..style = PaintingStyle.stroke

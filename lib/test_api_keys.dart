@@ -1,14 +1,14 @@
-/// API Key Verification Script
-/// Run with: dart run lib/test_api_keys.dart
+
+
 library;
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-// Gemini API Configuration (only active AI provider)
-const String geminiApiKey = 'AIzaSyCSzJ9j0nOqnhyAqmrDacJTm9daye9t59w';
-const String geminiBaseUrl = 'https://generativelanguage.googleapis.com/v1beta';
-const String geminiModel = 'gemini-2.5-flash';
+const String openRouterApiKey =
+    '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';
+const String openRouterBaseUrl = 'https://openrouter.ai/api/v1';
+const String openRouterModel = 'xiaomi/mimo-v2-flash:free';
 
 Future<void> main() async {
   print('╔══════════════════════════════════════════════════════════════╗');
@@ -16,55 +16,55 @@ Future<void> main() async {
   print('╠══════════════════════════════════════════════════════════════╣');
   print('');
 
-  // Test Gemini (only active provider)
-  await testGeminiApi();
+  await testOpenRouterApi();
   print('');
 
   print('╠══════════════════════════════════════════════════════════════╣');
-  print('║  OpenAI: DISABLED (no billing credits)                      ║');
-  print('║  HuggingFace: DISABLED (invalid token)                      ║');
+  print('║  OpenRouter: Xiaomi MiMo-V2-Flash (FREE)                    ║');
   print('╚══════════════════════════════════════════════════════════════╝');
 }
 
-Future<void> testGeminiApi() async {
-  print('🔍 Testing Gemini AI API...');
+Future<void> testOpenRouterApi() async {
+  print('🔍 Testing OpenRouter AI API (MiMo-V2-Flash)...');
   try {
-    final url = Uri.parse(
-        '$geminiBaseUrl/models/$geminiModel:generateContent?key=$geminiApiKey');
+    final url = Uri.parse('$openRouterBaseUrl/chat/completions');
 
     final response = await http
         .post(
           url,
-          headers: {'Content-Type': 'application/json'},
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $openRouterApiKey',
+            'HTTP-Referer': 'https://vidyarthi.app',
+            'X-Title': 'Vidyarthi Education App',
+          },
           body: jsonEncode({
-            'contents': [
+            'model': openRouterModel,
+            'messages': [
               {
-                'parts': [
-                  {'text': 'Say "Hello, API test successful!" in one line.'}
-                ]
+                'role': 'user',
+                'content': 'Say "Hello, API test successful!" in one line.'
               }
             ],
-            'generationConfig': {
-              'maxOutputTokens': 50,
-              'temperature': 0.1,
-            }
+            'max_tokens': 50,
+            'temperature': 0.1,
           }),
         )
         .timeout(const Duration(seconds: 30));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final text = data['candidates']?[0]?['content']?['parts']?[0]?['text'];
-      print('   ✅ GEMINI API: WORKING');
-      print('   📝 Model: $geminiModel');
+      final text = data['choices']?[0]?['message']?['content'];
+      print('   ✅ OPENROUTER API: WORKING');
+      print('   📝 Model: $openRouterModel');
       print('   📝 Response: ${text?.toString().trim() ?? "OK"}');
     } else {
-      print('   ❌ GEMINI API: FAILED');
+      print('   ❌ OPENROUTER API: FAILED');
       print('   📝 Status: ${response.statusCode}');
       print('   📝 Error: ${response.body}');
     }
   } catch (e) {
-    print('   ❌ GEMINI API: ERROR');
+    print('   ❌ OPENROUTER API: ERROR');
     print('   📝 Exception: $e');
   }
 }

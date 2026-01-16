@@ -1,5 +1,5 @@
-/// Gemini AI Service for Note Generation
-/// Uses Google's Gemini API for AI-powered note generation
+
+
 library;
 
 import 'dart:convert';
@@ -8,7 +8,6 @@ import 'package:http/http.dart' as http;
 
 import '../core/constants/app_constants.dart';
 
-/// Result wrapper for Gemini API responses
 class GeminiResult {
   final bool success;
   final String? content;
@@ -31,13 +30,11 @@ class GeminiResult {
       );
 }
 
-/// Gemini AI Service for generating notes and educational content
 class GeminiService {
   GeminiService._();
 
   static const Duration _timeout = Duration(seconds: 90);
 
-  /// Generate notes using Gemini AI
   static Future<GeminiResult> generateNotes({
     required String subject,
     required String topic,
@@ -45,7 +42,7 @@ class GeminiService {
     String? classLevel,
     String? additionalDetails,
     String language = 'English',
-    double detailLevel = 0.5, // 0.0 = brief, 1.0 = very detailed
+    double detailLevel = 0.5,
   }) async {
     try {
       final prompt = _buildNotesPrompt(
@@ -65,7 +62,6 @@ class GeminiService {
     }
   }
 
-  /// Summarize text using Gemini AI
   static Future<GeminiResult> summarizeText({
     required String text,
     String language = 'English',
@@ -73,7 +69,7 @@ class GeminiService {
   }) async {
     try {
       final prompt = '''
-You are an expert at summarizing educational content. 
+You are an expert at summarizing educational content.
 Summarize the following text in $language.
 Keep the summary concise but comprehensive, around $maxLength words maximum.
 Maintain the key points and important details.
@@ -91,7 +87,6 @@ Provide a clear, well-structured summary:
     }
   }
 
-  /// Explain a concept using Gemini AI
   static Future<GeminiResult> explainConcept({
     required String concept,
     required String subject,
@@ -123,12 +118,11 @@ Make the explanation engaging and easy to understand:
     }
   }
 
-  /// Generate quiz questions using Gemini AI
   static Future<GeminiResult> generateQuiz({
     required String topic,
     required String subject,
     int questionCount = 5,
-    String difficulty = 'medium', // easy, medium, hard
+    String difficulty = 'medium',
     String language = 'English',
   }) async {
     try {
@@ -162,7 +156,6 @@ Generate the quiz:
     }
   }
 
-  /// Solve a math problem using Gemini AI
   static Future<GeminiResult> solveMathProblem({
     required String problem,
     bool showSteps = true,
@@ -190,7 +183,6 @@ Solution:
     }
   }
 
-  /// Build the notes generation prompt
   static String _buildNotesPrompt({
     required String subject,
     required String topic,
@@ -200,7 +192,7 @@ Solution:
     required String language,
     required double detailLevel,
   }) {
-    // Determine detail level and structure
+
     String detailInstruction;
     if (detailLevel < 0.3) {
       detailInstruction =
@@ -263,22 +255,22 @@ Format as follows:
 📌 Concept 1: [Name]
 
    Definition: Clear definition in simple words
-   
+
    Explanation: Detailed explanation with examples
-   
+
    Key Points:
    • Point 1
    • Point 2
    • Point 3
-   
+
    Example: Practical example with clear explanation
 
 📌 Concept 2: [Name]
 
    Definition: Clear definition
-   
+
    Explanation: Detailed explanation
-   
+
    Key Points:
    • Point 1
    • Point 2
@@ -290,11 +282,11 @@ Format as follows:
 📐 Formula 1: Name of formula
 
    [Formula written clearly]
-   
+
    Where:
    • Variable 1 = explanation
    • Variable 2 = explanation
-   
+
    When to use: Application context
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -369,87 +361,52 @@ Format as follows:
 ''';
   }
 
-  /// Call the Gemini API
   static Future<GeminiResult> _callGeminiApi(String prompt) async {
-    final url = Uri.parse(
-      '${AppConstants.geminiBaseUrl}/models/${AppConstants.geminiModel}:generateContent?key=${AppConstants.geminiApiKey}',
-    );
+    final url = Uri.parse('${AppConstants.openRouterBaseUrl}/chat/completions');
 
     final requestBody = {
-      'contents': [
+      'model': AppConstants.openRouterModel,
+      'messages': [
         {
-          'parts': [
-            {'text': prompt}
-          ]
+          'role': 'user',
+          'content': prompt,
         }
       ],
-      'generationConfig': {
-        'temperature': 0.7,
-        'topK': 40,
-        'topP': 0.95,
-        'maxOutputTokens': 8192,
-      },
-      'safetySettings': [
-        {
-          'category': 'HARM_CATEGORY_HARASSMENT',
-          'threshold': 'BLOCK_MEDIUM_AND_ABOVE'
-        },
-        {
-          'category': 'HARM_CATEGORY_HATE_SPEECH',
-          'threshold': 'BLOCK_MEDIUM_AND_ABOVE'
-        },
-        {
-          'category': 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-          'threshold': 'BLOCK_MEDIUM_AND_ABOVE'
-        },
-        {
-          'category': 'HARM_CATEGORY_DANGEROUS_CONTENT',
-          'threshold': 'BLOCK_MEDIUM_AND_ABOVE'
-        },
-      ],
+      'temperature': 0.7,
+      'max_tokens': 8192,
     };
 
     try {
-      debugPrint('Calling Gemini API...');
+      debugPrint('Calling OpenRouter API (MiMo)...');
 
       final response = await http
           .post(
             url,
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': 'Bearer ${AppConstants.openRouterApiKey}',
+              'HTTP-Referer': 'https://vidyarthi.app',
+              'X-Title': 'Vidyarthi Education App',
             },
             body: jsonEncode(requestBody),
           )
           .timeout(_timeout);
 
-      debugPrint('Gemini API response status: ${response.statusCode}');
+      debugPrint('OpenRouter API response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-        // Extract the generated text from the response
-        final candidates = data['candidates'] as List<dynamic>?;
-        if (candidates != null && candidates.isNotEmpty) {
-          final firstCandidate = candidates[0] as Map<String, dynamic>;
-          final content = firstCandidate['content'] as Map<String, dynamic>?;
+        final choices = data['choices'] as List<dynamic>?;
+        if (choices != null && choices.isNotEmpty) {
+          final firstChoice = choices[0] as Map<String, dynamic>;
+          final message = firstChoice['message'] as Map<String, dynamic>?;
 
-          if (content != null) {
-            final parts = content['parts'] as List<dynamic>?;
-            if (parts != null && parts.isNotEmpty) {
-              final text = parts[0]['text'] as String?;
-              if (text != null && text.isNotEmpty) {
-                return GeminiResult.success(text);
-              }
+          if (message != null) {
+            final text = message['content'] as String?;
+            if (text != null && text.isNotEmpty) {
+              return GeminiResult.success(text);
             }
-          }
-        }
-
-        // Check for blocked content
-        final promptFeedback = data['promptFeedback'] as Map<String, dynamic>?;
-        if (promptFeedback != null) {
-          final blockReason = promptFeedback['blockReason'] as String?;
-          if (blockReason != null) {
-            return GeminiResult.failure('Content blocked: $blockReason');
           }
         }
 
@@ -468,7 +425,7 @@ Format as follows:
         return GeminiResult.failure('API Error: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('Gemini API call error: $e');
+      debugPrint('OpenRouter API call error: $e');
       if (e.toString().contains('TimeoutException')) {
         return GeminiResult.failure('Request timed out. Please try again.');
       }
@@ -476,18 +433,16 @@ Format as follows:
     }
   }
 
-  /// Check if the API key is configured
   static bool get isConfigured =>
-      AppConstants.geminiApiKey.isNotEmpty &&
-      AppConstants.geminiApiKey != 'YOUR_API_KEY_HERE';
+      AppConstants.openRouterApiKey.isNotEmpty &&
+      AppConstants.openRouterApiKey != 'YOUR_API_KEY_HERE';
 
-  /// Test the API connection
   static Future<bool> testConnection() async {
     try {
       final result = await _callGeminiApi('Say "Hello" in one word.');
       return result.success;
     } catch (e) {
-      debugPrint('Gemini connection test failed: $e');
+      debugPrint('OpenRouter connection test failed: $e');
       return false;
     }
   }

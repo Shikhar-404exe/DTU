@@ -1,9 +1,10 @@
-/// Note organization models for structuring saved notes
+
+library;
 
 class NoteClass {
   final String id;
   final String name;
-  final int? grade; // null for college
+  final int? grade;
 
   const NoteClass({
     required this.id,
@@ -40,20 +41,18 @@ class Subject {
   });
 
   static const List<Subject> allSubjects = [
-    // Primary subjects (Class 1-5)
+
     Subject(id: 'english', name: 'English', emoji: '📖'),
     Subject(id: 'hindi', name: 'Hindi', emoji: '📝'),
     Subject(id: 'math', name: 'Mathematics', emoji: '🔢'),
     Subject(id: 'evs', name: 'EVS', emoji: '🌍'),
     Subject(id: 'drawing', name: 'Drawing', emoji: '🎨'),
 
-    // Secondary subjects (Class 6-10)
     Subject(id: 'science', name: 'Science', emoji: '🔬'),
     Subject(id: 'social', name: 'Social Studies', emoji: '🗺️'),
     Subject(id: 'computer', name: 'Computer', emoji: '💻'),
     Subject(id: 'sanskrit', name: 'Sanskrit', emoji: '🕉️'),
 
-    // Higher Secondary (Class 11-12)
     Subject(id: 'physics', name: 'Physics', emoji: '⚛️'),
     Subject(id: 'chemistry', name: 'Chemistry', emoji: '🧪'),
     Subject(id: 'biology', name: 'Biology', emoji: '🧬'),
@@ -64,14 +63,12 @@ class Subject {
     Subject(id: 'geography', name: 'Geography', emoji: '🌏'),
     Subject(id: 'political', name: 'Political Science', emoji: '🏛️'),
 
-    // College
     Subject(id: 'engineering', name: 'Engineering', emoji: '⚙️'),
     Subject(id: 'medical', name: 'Medical', emoji: '🏥'),
     Subject(id: 'law', name: 'Law', emoji: '⚖️'),
     Subject(id: 'commerce', name: 'Commerce', emoji: '💼'),
     Subject(id: 'arts', name: 'Arts', emoji: '🎭'),
 
-    // Common
     Subject(id: 'other', name: 'Other', emoji: '📚'),
   ];
 }
@@ -106,8 +103,8 @@ class OrganizedNote {
   final String subjectId;
   final String categoryId;
   final DateTime createdAt;
-  final String? filePath; // For PDFs
-  final String type; // 'text' or 'pdf'
+  final String? filePath;
+  final String type;
 
   OrganizedNote({
     required this.id,

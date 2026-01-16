@@ -1,6 +1,6 @@
-// filepath: lib/screens/teacher/teacher_dashboard_wrapper.dart
-/// Teacher Dashboard Main Wrapper
-/// Bottom navigation with Dashboard, Attendance, Lessons, Analytics tabs
+
+
+library;
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,14 +30,12 @@ class _TeacherDashboardWrapperState extends State<TeacherDashboardWrapper> {
     _verifyTeacherAccess();
   }
 
-  /// Security: Verify user is authenticated and has teacher role
   Future<void> _verifyTeacherAccess() async {
     try {
       final authService = FirebaseAuthService.instance;
       final prefs = await SharedPreferences.getInstance();
       final userRole = prefs.getString('user_role');
 
-      // Security check: Must be authenticated AND have teacher role
       if (authService.currentUser == null || userRole != 'teacher') {
         debugPrint('Security: Unauthorized teacher dashboard access attempt');
         if (mounted) {
@@ -72,7 +70,6 @@ class _TeacherDashboardWrapperState extends State<TeacherDashboardWrapper> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Show loading while verifying teacher access
     if (_isVerifying) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),

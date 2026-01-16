@@ -1,10 +1,9 @@
-/// Enterprise-level Loading Overlay
-/// Provides a consistent loading experience across the app
+
+
 library;
 
 import 'package:flutter/material.dart';
 
-/// Loading overlay that covers the entire screen
 class LoadingOverlay extends StatelessWidget {
   final bool isLoading;
   final Widget child;
@@ -95,7 +94,6 @@ class _LoadingIndicator extends StatelessWidget {
   }
 }
 
-/// Shimmer loading placeholder
 class ShimmerLoading extends StatefulWidget {
   final double width;
   final double height;
@@ -174,7 +172,6 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
   }
 }
 
-/// Skeleton card for loading states
 class SkeletonCard extends StatelessWidget {
   final double? width;
   final double height;
@@ -211,7 +208,6 @@ class SkeletonCard extends StatelessWidget {
   }
 }
 
-/// Pull to refresh wrapper with loading state
 class RefreshableList<T> extends StatelessWidget {
   final List<T> items;
   final Future<void> Function() onRefresh;

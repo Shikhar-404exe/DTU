@@ -42,11 +42,9 @@ class _NoteScanQRState extends State<NoteScanQR> {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // Use provided classId or get user's class (default to class_10)
       final userClassId =
           classId ?? prefs.getString('profile_class_id') ?? 'class_10';
 
-      // Use provided categoryId or determine based on type
       String finalCategoryId = categoryId ?? 'other';
       if (finalCategoryId == 'other') {
         if (type == 'pdf' || type == 'ebook') {
@@ -56,7 +54,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
         }
       }
 
-      // Use provided subjectId or try to infer from title (simple keyword matching)
       String finalSubjectId = subjectId ?? 'other';
       if (finalSubjectId == 'other') {
         final titleLower = title.toLowerCase();
@@ -92,7 +89,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
         }
       }
 
-      // Create organized note
       final newNote = OrganizedNote(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         title: title,
@@ -105,7 +101,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
         type: type,
       );
 
-      // Save to organized notes
       final notesJson = prefs.getString('organized_notes') ?? '[]';
       final notesList =
           (jsonDecode(notesJson) as List).cast<Map<String, dynamic>>();
@@ -131,7 +126,7 @@ class _NoteScanQRState extends State<NoteScanQR> {
     });
 
     try {
-      // Try v2 QRPayload format first (new system)
+
       try {
         final payload = jsonDecode(raw) as Map<String, dynamic>;
         if (payload['v'] == 2) {
@@ -139,10 +134,9 @@ class _NoteScanQRState extends State<NoteScanQR> {
           return;
         }
       } catch (_) {
-        // Not v2 format, try legacy formats
+
       }
 
-      // Legacy formats
       if (raw.startsWith("NDP2P1|")) {
         await _handleP2PFileQr(raw);
       } else if (raw.startsWith("NDQR1|") || raw.startsWith("NDQR2|")) {
@@ -172,8 +166,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
     }
   }
 
-  // ---------------- HANDLE V2 QRPAYLOAD (NEW SYSTEM) ----------------
-
   Future<void> _handleV2Payload(Map<String, dynamic> payload) async {
     final type = payload['type'] as String?;
     final data = payload['data'] as Map<String, dynamic>?;
@@ -198,7 +190,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
     final compressed = data['compressed'] == true;
     final fileName = data['fileName'] as String?;
 
-    // Extract metadata
     final classId = data['classId'] as String?;
     final subjectId = data['subjectId'] as String?;
     final categoryId = data['categoryId'] as String?;
@@ -211,7 +202,7 @@ class _NoteScanQRState extends State<NoteScanQR> {
     List<int>? fileBytes;
 
     if (compressed) {
-      // Decompress
+
       try {
         final compressedBytes = base64Decode(contentB64);
         final decompressed = GZipDecoder().decodeBytes(compressedBytes);
@@ -219,7 +210,7 @@ class _NoteScanQRState extends State<NoteScanQR> {
         if (type == 'text') {
           content = utf8.decode(decompressed);
         } else {
-          // PDF or other file type
+
           fileBytes = decompressed;
           content = 'File content';
         }
@@ -227,21 +218,20 @@ class _NoteScanQRState extends State<NoteScanQR> {
         throw "Failed to decompress content: $e";
       }
     } else {
-      // Not compressed
+
       if (type == 'text') {
         try {
           content = utf8.decode(base64Decode(contentB64));
         } catch (_) {
-          content = contentB64; // Already decoded
+          content = contentB64;
         }
       } else {
-        // File type - decode as bytes
+
         fileBytes = base64Decode(contentB64);
         content = 'File content';
       }
     }
 
-    // Save file to disk if it's not plain text
     String? filePath;
     if (type != 'text' && fileBytes != null) {
       final dir = await getApplicationDocumentsDirectory();
@@ -252,7 +242,7 @@ class _NoteScanQRState extends State<NoteScanQR> {
       final file = File(filePath);
       await file.writeAsBytes(fileBytes);
     } else if (type == 'text') {
-      // Save text to file as well
+
       final dir = await getApplicationDocumentsDirectory();
       filePath =
           p.join(dir.path, 'text_${DateTime.now().millisecondsSinceEpoch}.txt');
@@ -260,7 +250,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
       await file.writeAsString(content);
     }
 
-    // Save to storage (legacy format)
     final notes = await StorageService.loadNotes();
     notes.add({
       "title": title,
@@ -271,7 +260,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
     });
     await StorageService.saveNotes(notes);
 
-    // Save as organized note with metadata
     await _saveAsOrganizedNote(
       title: title,
       type: type == 'pdf' ? 'pdf' : 'text',
@@ -292,7 +280,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
       ),
     );
 
-    // Show preview for text notes
     if (type == 'text') {
       _showNotePreview(title, content);
     }
@@ -307,7 +294,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
     final fileType = data['type'] as String? ?? 'pdf';
     final networkName = data['networkName'] as String?;
 
-    // Extract metadata
     final classId = data['classId'] as String?;
     final subjectId = data['subjectId'] as String?;
     final categoryId = data['categoryId'] as String?;
@@ -323,7 +309,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
 
     if (!mounted) return;
 
-    // Show downloading dialog
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -345,7 +330,7 @@ class _NoteScanQRState extends State<NoteScanQR> {
     );
 
     try {
-      // Download file from sender
+
       final file = await P2PFileShareService.downloadFile(
         ip: ip,
         port: intPort,
@@ -353,12 +338,11 @@ class _NoteScanQRState extends State<NoteScanQR> {
         suggestedName: fileName,
       );
 
-      // Determine note type and read content for text files
       String? textContent;
       String noteType;
 
       if (fileType == 'text') {
-        // Read text content from downloaded file
+
         textContent = await file.readAsString();
         noteType = 'text';
       } else if (fileType == 'pdf' || fileType == 'ebook') {
@@ -367,7 +351,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
         noteType = 'file';
       }
 
-      // Save to notes (both old and new format)
       final notes = await StorageService.loadNotes();
       notes.add({
         "title": title,
@@ -378,7 +361,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
       });
       await StorageService.saveNotes(notes);
 
-      // Save as organized note with metadata and content
       await _saveAsOrganizedNote(
         title: title,
         type: noteType,
@@ -390,7 +372,7 @@ class _NoteScanQRState extends State<NoteScanQR> {
       );
 
       if (!mounted) return;
-      Navigator.pop(context); // Close downloading dialog
+      Navigator.pop(context);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -401,7 +383,7 @@ class _NoteScanQRState extends State<NoteScanQR> {
       );
     } catch (e) {
       if (!mounted) return;
-      Navigator.pop(context); // Close downloading dialog
+      Navigator.pop(context);
       throw "P2P download failed: $e";
     }
   }
@@ -446,8 +428,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
     );
   }
 
-  // ---------------- HANDLE NORMAL NOTES (NDQR1) ----------------
-
   Future<void> _handleNoteQr(String raw) async {
     final parts = raw.split("|");
     if (parts.length < 2) {
@@ -457,7 +437,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
 
     final compressedBytes = base64Decode(chunk);
 
-    // Try raw → 1-pass zlib → 3-pass zlib
     String payloadText;
     try {
       payloadText = utf8.decode(compressedBytes);
@@ -497,12 +476,10 @@ class _NoteScanQRState extends State<NoteScanQR> {
       if (type == "text") {
         final content = payload["content"] as String? ?? payloadText;
 
-        // Extract metadata
         final classId = payload["classId"] as String?;
         final subjectId = payload["subjectId"] as String?;
         final categoryId = payload["categoryId"] as String?;
 
-        // Save text to file for organized notes
         final dir = await getApplicationDocumentsDirectory();
         final filePath = p.join(
             dir.path, "qr_text_${DateTime.now().millisecondsSinceEpoch}.txt");
@@ -517,7 +494,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
         });
         await StorageService.saveNotes(notes);
 
-        // Save as organized note with metadata
         await _saveAsOrganizedNote(
           title: title,
           type: "text",
@@ -542,7 +518,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
         final pdfFile = File(filePath);
         await pdfFile.writeAsBytes(bytes);
 
-        // Extract metadata
         final classId = payload["classId"] as String?;
         final subjectId = payload["subjectId"] as String?;
         final categoryId = payload["categoryId"] as String?;
@@ -555,7 +530,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
         });
         await StorageService.saveNotes(notes);
 
-        // Save as organized note with metadata
         await _saveAsOrganizedNote(
           title: title,
           type: "pdf",
@@ -579,7 +553,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
         final imgFile = File(filePath);
         await imgFile.writeAsBytes(bytes);
 
-        // Extract metadata
         final classId = payload["classId"] as String?;
         final subjectId = payload["subjectId"] as String?;
         final categoryId = payload["categoryId"] as String?;
@@ -592,7 +565,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
         });
         await StorageService.saveNotes(notes);
 
-        // Save as organized note with metadata
         await _saveAsOrganizedNote(
           title: title,
           type: "image",
@@ -605,15 +577,13 @@ class _NoteScanQRState extends State<NoteScanQR> {
         displayTitle = title;
         displayText = "Image note saved. View it in Saved Notes.";
       } else {
-        // Fallback: treat as text
+
         final content = payload["content"] as String? ?? payloadText;
 
-        // Extract metadata
         final classId = payload["classId"] as String?;
         final subjectId = payload["subjectId"] as String?;
         final categoryId = payload["categoryId"] as String?;
 
-        // Save text to file for organized notes
         final dir = await getApplicationDocumentsDirectory();
         final filePath = p.join(
             dir.path, "qr_text_${DateTime.now().millisecondsSinceEpoch}.txt");
@@ -628,7 +598,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
         });
         await StorageService.saveNotes(notes);
 
-        // Save as organized note with metadata
         await _saveAsOrganizedNote(
           title: title,
           type: "text",
@@ -643,7 +612,7 @@ class _NoteScanQRState extends State<NoteScanQR> {
         displayText = content;
       }
     } else {
-      // Save text to file for organized notes
+
       final dir = await getApplicationDocumentsDirectory();
       final filePath = p.join(
           dir.path, "qr_text_${DateTime.now().millisecondsSinceEpoch}.txt");
@@ -658,7 +627,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
       });
       await StorageService.saveNotes(notes);
 
-      // Save as organized note
       await _saveAsOrganizedNote(
         title: displayTitle,
         type: "text",
@@ -689,10 +657,8 @@ class _NoteScanQRState extends State<NoteScanQR> {
     );
   }
 
-  // ---------------- HANDLE LARGE FILE HANDSHAKE (NDP2P1) ----------------
-
   Future<void> _handleP2PFileQr(String raw) async {
-    // NDP2P1|<base64(json)>
+
     final parts = raw.split("|");
     if (parts.length < 2) throw "Corrupted P2P QR data";
 
@@ -714,7 +680,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
     final fileType = payload["fileType"] as String? ?? "pdf";
     final title = payload["title"] as String? ?? "Received File";
 
-    // Extract metadata if present
     final classId = payload["classId"] as String?;
     final subjectId = payload["subjectId"] as String?;
     final categoryId = payload["categoryId"] as String?;
@@ -728,7 +693,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
       throw "Invalid port in P2P data";
     }
 
-    // Download file from sender's local HTTP server
     final file = await P2PFileShareService.downloadFile(
       ip: ip,
       port: intPort,
@@ -736,7 +700,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
       suggestedName: fileName,
     );
 
-    // Save into notes (both old and new format)
     final notes = await StorageService.loadNotes();
     final timestamp = DateTime.now().toIso8601String();
 
@@ -750,7 +713,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
     });
     await StorageService.saveNotes(notes);
 
-    // Save as organized note with metadata
     await _saveAsOrganizedNote(
       title: title,
       type: type,
@@ -774,7 +736,7 @@ class _NoteScanQRState extends State<NoteScanQR> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenSize = MediaQuery.of(context).size;
-    final scanAreaSize = screenSize.width * 0.7; // 70% of screen width
+    final scanAreaSize = screenSize.width * 0.7;
 
     return GradientBackground(
       child: Scaffold(
@@ -785,7 +747,7 @@ class _NoteScanQRState extends State<NoteScanQR> {
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.black87, // Always black for visibility
+              color: Colors.black87,
             ),
           ),
           backgroundColor: Colors.transparent,
@@ -795,7 +757,7 @@ class _NoteScanQRState extends State<NoteScanQR> {
         ),
         body: Column(
           children: [
-            // Camera preview area (takes most of the screen but not full)
+
             Expanded(
               child: Container(
                 margin: const EdgeInsets.all(16),
@@ -803,7 +765,7 @@ class _NoteScanQRState extends State<NoteScanQR> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withAlpha(51), // ~0.2 opacity
+                      color: Colors.black.withAlpha(51),
                       blurRadius: 16,
                       offset: const Offset(0, 8),
                     ),
@@ -813,12 +775,11 @@ class _NoteScanQRState extends State<NoteScanQR> {
                   borderRadius: BorderRadius.circular(24),
                   child: Stack(
                     children: [
-                      // Camera scanner
+
                       MobileScanner(
                         onDetect: _onDetect,
                       ),
 
-                      // Crosshair overlay
                       Center(
                         child: Container(
                           width: scanAreaSize,
@@ -834,26 +795,25 @@ class _NoteScanQRState extends State<NoteScanQR> {
                           ),
                           child: Stack(
                             children: [
-                              // Corner brackets
-                              // Top-left
+
                               Positioned(
                                 top: 0,
                                 left: 0,
                                 child: _buildCorner(isDark, topLeft: true),
                               ),
-                              // Top-right
+
                               Positioned(
                                 top: 0,
                                 right: 0,
                                 child: _buildCorner(isDark, topRight: true),
                               ),
-                              // Bottom-left
+
                               Positioned(
                                 bottom: 0,
                                 left: 0,
                                 child: _buildCorner(isDark, bottomLeft: true),
                               ),
-                              // Bottom-right
+
                               Positioned(
                                 bottom: 0,
                                 right: 0,
@@ -864,7 +824,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
                         ),
                       ),
 
-                      // Scanning hint
                       Positioned(
                         bottom: 20,
                         left: 0,
@@ -875,7 +834,7 @@ class _NoteScanQRState extends State<NoteScanQR> {
                                 horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(
                               color:
-                                  Colors.black.withAlpha(153), // ~0.6 opacity
+                                  Colors.black.withAlpha(153),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Text(
@@ -890,7 +849,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
                         ),
                       ),
 
-                      // Error display
                       if (_error != null)
                         Positioned(
                           bottom: 60,
@@ -899,7 +857,7 @@ class _NoteScanQRState extends State<NoteScanQR> {
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.red.withAlpha(230), // ~0.9 opacity
+                              color: Colors.red.withAlpha(230),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -915,7 +873,6 @@ class _NoteScanQRState extends State<NoteScanQR> {
               ),
             ),
 
-            // Bottom info area
             Container(
               padding: const EdgeInsets.all(20),
               child: Text(

@@ -1,12 +1,13 @@
-/// YouTube Video Browser
-/// Browse and watch educational videos
+
+
+library;
 
 import 'package:flutter/material.dart';
 import '../services/youtube_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class YouTubeBrowserScreen extends StatefulWidget {
-  const YouTubeBrowserScreen({Key? key}) : super(key: key);
+  const YouTubeBrowserScreen({super.key});
 
   @override
   State<YouTubeBrowserScreen> createState() => _YouTubeBrowserScreenState();
@@ -107,7 +108,7 @@ class _YouTubeBrowserScreenState extends State<YouTubeBrowserScreen> {
       appBar: AppBar(
         title: const Text('Educational Videos'),
         actions: [
-          // Language selector
+
           PopupMenuButton<String>(
             icon: const Icon(Icons.language),
             onSelected: (lang) {
@@ -121,7 +122,7 @@ class _YouTubeBrowserScreenState extends State<YouTubeBrowserScreen> {
               const PopupMenuItem(value: 'pa', child: Text('Punjabi')),
             ],
           ),
-          // Subject filter
+
           PopupMenuButton<String>(
             icon: const Icon(Icons.subject),
             onSelected: (subject) {
@@ -138,7 +139,7 @@ class _YouTubeBrowserScreenState extends State<YouTubeBrowserScreen> {
       ),
       body: Column(
         children: [
-          // Search bar
+
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
@@ -165,7 +166,6 @@ class _YouTubeBrowserScreenState extends State<YouTubeBrowserScreen> {
             ),
           ),
 
-          // Offline mode banner
           if (_isOfflineMode)
             Container(
               width: double.infinity,
@@ -185,7 +185,6 @@ class _YouTubeBrowserScreenState extends State<YouTubeBrowserScreen> {
               ),
             ),
 
-          // Content
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -213,7 +212,7 @@ class _YouTubeBrowserScreenState extends State<YouTubeBrowserScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Thumbnail
+
                 AspectRatio(
                   aspectRatio: 16 / 9,
                   child: Image.network(
@@ -233,7 +232,7 @@ class _YouTubeBrowserScreenState extends State<YouTubeBrowserScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title
+
                       Text(
                         video.title,
                         style: const TextStyle(
@@ -245,7 +244,6 @@ class _YouTubeBrowserScreenState extends State<YouTubeBrowserScreen> {
                       ),
                       const SizedBox(height: 8),
 
-                      // Channel
                       Row(
                         children: [
                           const Icon(Icons.account_circle, size: 16),
@@ -260,7 +258,6 @@ class _YouTubeBrowserScreenState extends State<YouTubeBrowserScreen> {
                         ],
                       ),
 
-                      // Stats
                       if (video.viewCount != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 4),

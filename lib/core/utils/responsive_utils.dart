@@ -1,34 +1,29 @@
-/// Enterprise-level Responsive Utilities
-/// Ensures consistent UI across all device sizes (mobile, tablet, desktop, web)
+
+
 library;
 
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-/// Device type enumeration
 enum DeviceType {
   mobile,
   tablet,
   desktop,
 }
 
-/// Screen orientation
 enum ScreenOrientation {
   portrait,
   landscape,
 }
 
-/// Responsive utility class for cross-device compatibility
 class ResponsiveUtils {
   ResponsiveUtils._();
 
-  // Breakpoints (following Material Design guidelines)
   static const double mobileBreakpoint = 600;
   static const double tabletBreakpoint = 1024;
   static const double desktopBreakpoint = 1440;
 
-  /// Get current device type based on screen width
   static DeviceType getDeviceType(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     if (width < mobileBreakpoint) return DeviceType.mobile;
@@ -36,37 +31,27 @@ class ResponsiveUtils {
     return DeviceType.desktop;
   }
 
-  /// Check if running on mobile device
   static bool isMobile(BuildContext context) =>
       getDeviceType(context) == DeviceType.mobile;
 
-  /// Check if running on tablet
   static bool isTablet(BuildContext context) =>
       getDeviceType(context) == DeviceType.tablet;
 
-  /// Check if running on desktop
   static bool isDesktop(BuildContext context) =>
       getDeviceType(context) == DeviceType.desktop;
 
-  /// Check if running on web
   static bool get isWeb => kIsWeb;
 
-  /// Check if running on Android
   static bool get isAndroid => !kIsWeb && Platform.isAndroid;
 
-  /// Check if running on iOS
   static bool get isIOS => !kIsWeb && Platform.isIOS;
 
-  /// Check if running on Windows
   static bool get isWindows => !kIsWeb && Platform.isWindows;
 
-  /// Check if running on macOS
   static bool get isMacOS => !kIsWeb && Platform.isMacOS;
 
-  /// Check if running on Linux
   static bool get isLinux => !kIsWeb && Platform.isLinux;
 
-  /// Get current screen orientation
   static ScreenOrientation getOrientation(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     return size.width > size.height
@@ -74,11 +59,9 @@ class ResponsiveUtils {
         : ScreenOrientation.portrait;
   }
 
-  /// Check if in landscape mode
   static bool isLandscape(BuildContext context) =>
       getOrientation(context) == ScreenOrientation.landscape;
 
-  /// Get responsive value based on device type
   static T responsiveValue<T>(
     BuildContext context, {
     required T mobile,
@@ -96,7 +79,6 @@ class ResponsiveUtils {
     }
   }
 
-  /// Get responsive padding
   static EdgeInsets responsivePadding(BuildContext context) {
     return responsiveValue(
       context,
@@ -106,7 +88,6 @@ class ResponsiveUtils {
     );
   }
 
-  /// Get responsive horizontal padding
   static double responsiveHorizontalPadding(BuildContext context) {
     return responsiveValue(
       context,
@@ -116,7 +97,6 @@ class ResponsiveUtils {
     );
   }
 
-  /// Get responsive card width (for grid layouts)
   static double responsiveCardWidth(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
     return responsiveValue(
@@ -127,7 +107,6 @@ class ResponsiveUtils {
     );
   }
 
-  /// Get number of grid columns
   static int responsiveGridColumns(BuildContext context) {
     return responsiveValue(
       context,
@@ -137,7 +116,6 @@ class ResponsiveUtils {
     );
   }
 
-  /// Get grid cross axis count with customizable columns per device
   static int getGridCrossAxisCount(
     BuildContext context, {
     int baseColumns = 2,
@@ -152,7 +130,6 @@ class ResponsiveUtils {
     );
   }
 
-  /// Get responsive font size
   static double responsiveFontSize(
     BuildContext context, {
     required double base,
@@ -167,49 +144,41 @@ class ResponsiveUtils {
     );
   }
 
-  /// Get safe area padding
   static EdgeInsets getSafeAreaPadding(BuildContext context) {
     return MediaQuery.paddingOf(context);
   }
 
-  /// Get screen size
   static Size getScreenSize(BuildContext context) {
     return MediaQuery.sizeOf(context);
   }
 
-  /// Get screen width
   static double getScreenWidth(BuildContext context) {
     return MediaQuery.sizeOf(context).width;
   }
 
-  /// Get screen height
   static double getScreenHeight(BuildContext context) {
     return MediaQuery.sizeOf(context).height;
   }
 
-  /// Check if keyboard is visible
   static bool isKeyboardVisible(BuildContext context) {
     return MediaQuery.viewInsetsOf(context).bottom > 0;
   }
 
-  /// Get keyboard height
   static double getKeyboardHeight(BuildContext context) {
     return MediaQuery.viewInsetsOf(context).bottom;
   }
 
-  /// Get max content width (for centered layouts on wide screens)
   static double getMaxContentWidth(BuildContext context) {
     final screenWidth = getScreenWidth(context);
     return responsiveValue(
       context,
       mobile: screenWidth,
       tablet: screenWidth * 0.85,
-      desktop: 1200.0, // Max width for desktop
+      desktop: 1200.0,
     );
   }
 }
 
-/// Responsive builder widget
 class ResponsiveBuilder extends StatelessWidget {
   final Widget Function(BuildContext context, DeviceType deviceType) builder;
   final Widget? mobile;
@@ -224,7 +193,6 @@ class ResponsiveBuilder extends StatelessWidget {
     this.desktop,
   });
 
-  /// Named constructor for providing separate widgets
   const ResponsiveBuilder.widgets({
     super.key,
     required Widget this.mobile,
@@ -240,7 +208,6 @@ class ResponsiveBuilder extends StatelessWidget {
   Widget build(BuildContext context) {
     final deviceType = ResponsiveUtils.getDeviceType(context);
 
-    // If using named constructor with widgets
     if (mobile != null) {
       switch (deviceType) {
         case DeviceType.desktop:
@@ -252,12 +219,10 @@ class ResponsiveBuilder extends StatelessWidget {
       }
     }
 
-    // Using builder function
     return builder(context, deviceType);
   }
 }
 
-/// Responsive container that centers content on wide screens
 class ResponsiveContainer extends StatelessWidget {
   final Widget child;
   final double? maxWidth;
@@ -289,7 +254,6 @@ class ResponsiveContainer extends StatelessWidget {
   }
 }
 
-/// Responsive grid that adjusts columns based on screen size
 class ResponsiveGrid extends StatelessWidget {
   final List<Widget> children;
   final int? mobileColumns;
@@ -342,33 +306,24 @@ class ResponsiveGrid extends StatelessWidget {
   }
 }
 
-/// Extension for responsive sizing
 extension ResponsiveExtension on BuildContext {
-  /// Get device type
+
   DeviceType get deviceType => ResponsiveUtils.getDeviceType(this);
 
-  /// Check if mobile
   bool get isMobile => ResponsiveUtils.isMobile(this);
 
-  /// Check if tablet
   bool get isTablet => ResponsiveUtils.isTablet(this);
 
-  /// Check if desktop
   bool get isDesktop => ResponsiveUtils.isDesktop(this);
 
-  /// Check if landscape
   bool get isLandscape => ResponsiveUtils.isLandscape(this);
 
-  /// Screen width
   double get screenWidth => ResponsiveUtils.getScreenWidth(this);
 
-  /// Screen height
   double get screenHeight => ResponsiveUtils.getScreenHeight(this);
 
-  /// Safe area padding
   EdgeInsets get safeAreaPadding => ResponsiveUtils.getSafeAreaPadding(this);
 
-  /// Responsive value helper
   T responsive<T>({
     required T mobile,
     T? tablet,

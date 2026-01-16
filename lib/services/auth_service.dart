@@ -13,7 +13,7 @@ class AuthService {
   static Future<Map<String, dynamic>> login(
       String email, String password) async {
     try {
-      // Sanitize and validate inputs
+
       final sanitizedEmail = SecurityHelper.sanitizeInput(email);
 
       if (!SecurityHelper.isValidEmail(sanitizedEmail)) {
@@ -26,7 +26,6 @@ class AuthService {
         throw Exception('Invalid input detected');
       }
 
-      // Use secure HTTP client
       final res = await SecureHttpClient.post(
         url: '$baseUrl/auth/login',
         body: {'email': sanitizedEmail, 'password': password},
@@ -47,14 +46,13 @@ class AuthService {
   static Future<Map<String, dynamic>> register(
       String email, String password) async {
     try {
-      // Sanitize and validate inputs
+
       final sanitizedEmail = SecurityHelper.sanitizeInput(email);
 
       if (!SecurityHelper.isValidEmail(sanitizedEmail)) {
         throw Exception('Invalid email format');
       }
 
-      // Check password strength
       if (SecurityHelper.isWeakPassword(password)) {
         throw Exception('Password is too weak');
       }
@@ -70,7 +68,6 @@ class AuthService {
         throw Exception('Invalid input detected');
       }
 
-      // Use secure HTTP client
       final res = await SecureHttpClient.post(
         url: '$baseUrl/auth/register',
         body: {'email': sanitizedEmail, 'password': password},

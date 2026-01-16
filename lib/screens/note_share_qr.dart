@@ -10,7 +10,7 @@ import '../services/p2p_file_share_service.dart';
 import '../services/qr_share_helper.dart';
 
 class NoteShareQR extends StatefulWidget {
-  final String note; // JSON string of QRPayload
+  final String note;
   final double detailedness;
 
   const NoteShareQR({
@@ -38,21 +38,21 @@ class _NoteShareQRState extends State<NoteShareQR> {
 
   @override
   void dispose() {
-    // Stop hosting if we were hosting a file
+
     P2PFileShareService.stopHosting();
     super.dispose();
   }
 
   void _initPayload() async {
     try {
-      // Parse QRPayload from JSON
+
       _payload = QRPayload.fromJson(widget.note);
 
       if (_payload!.type == QRDataType.p2p) {
-        // P2P mode - need to start hosting
+
         await _startP2PHosting();
       } else {
-        // Inline mode - QR ready to display
+
         _qrData = widget.note;
       }
 
@@ -81,10 +81,8 @@ class _NoteShareQRState extends State<NoteShareQR> {
         throw Exception('File not found: $filePath');
       }
 
-      // Start P2P hosting
       final hostInfo = await P2PFileShareService.startHosting(file);
 
-      // Update payload with P2P connection info
       data['sessionId'] = hostInfo.sessionId;
       data['ip'] = hostInfo.ip;
       data['port'] = hostInfo.port;
@@ -92,7 +90,6 @@ class _NoteShareQRState extends State<NoteShareQR> {
 
       _networkName = hostInfo.networkName;
 
-      // Create QR with updated P2P info
       _qrData = jsonEncode({
         'v': 2,
         'type': 'p2p',
@@ -105,8 +102,6 @@ class _NoteShareQRState extends State<NoteShareQR> {
     }
   }
 
-  // ---------------- UI ----------------
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -116,7 +111,7 @@ class _NoteShareQRState extends State<NoteShareQR> {
     return Container(
       color: isDark
           ? AppColors.backgroundDark
-          : const Color(0xFFFFDAD0), // pastel salmon
+          : const Color(0xFFFFDAD0),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -200,7 +195,7 @@ class _NoteShareQRState extends State<NoteShareQR> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Mode indicator
+
           if (isP2P)
             Container(
               margin: const EdgeInsets.only(bottom: 12),
@@ -273,7 +268,6 @@ class _NoteShareQRState extends State<NoteShareQR> {
               ),
             ),
 
-          // QR Code
           Card(
             elevation: 12,
             shadowColor: isDark ? Colors.black45 : Colors.black26,
@@ -292,7 +286,6 @@ class _NoteShareQRState extends State<NoteShareQR> {
 
           const SizedBox(height: 20),
 
-          // Title
           Text(
             title,
             style: TextStyle(
@@ -305,7 +298,6 @@ class _NoteShareQRState extends State<NoteShareQR> {
 
           const SizedBox(height: 12),
 
-          // Instructions
           if (isP2P)
             Container(
               padding: const EdgeInsets.all(16),

@@ -3,13 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-/// Network utility with retry and timeout logic
 class NetworkHelper {
   static const Duration defaultTimeout = Duration(seconds: 30);
   static const int maxRetries = 3;
   static const Duration retryDelay = Duration(seconds: 2);
 
-  /// GET request with retry logic
   static Future<http.Response> getWithRetry(
     String url, {
     Map<String, String>? headers,
@@ -32,7 +30,6 @@ class NetworkHelper {
           return response;
         }
 
-        // If server error (5xx), retry
         if (response.statusCode >= 500 && attempts < retries - 1) {
           debugPrint('⚠ Server error ${response.statusCode}, retrying...');
           await Future.delayed(retryDelay);
@@ -56,7 +53,6 @@ class NetworkHelper {
     throw Exception('Failed after $retries attempts');
   }
 
-  /// POST request with retry logic
   static Future<http.Response> postWithRetry(
     String url, {
     Map<String, String>? headers,
@@ -85,7 +81,6 @@ class NetworkHelper {
           return response;
         }
 
-        // If server error (5xx), retry
         if (response.statusCode >= 500 && attempts < retries - 1) {
           debugPrint('⚠ Server error ${response.statusCode}, retrying...');
           await Future.delayed(retryDelay);
@@ -109,7 +104,6 @@ class NetworkHelper {
     throw Exception('Failed after $retries attempts');
   }
 
-  /// Check if backend is reachable
   static Future<bool> checkBackendHealth(String backendUrl) async {
     try {
       final response = await http
@@ -127,7 +121,6 @@ class NetworkHelper {
     }
   }
 
-  /// Parse error message from response
   static String parseErrorMessage(http.Response response) {
     try {
       final data = jsonDecode(response.body);
@@ -144,7 +137,6 @@ class NetworkHelper {
       debugPrint('Failed to parse error message: $e');
     }
 
-    // Fallback to status code message
     switch (response.statusCode) {
       case 400:
         return 'Bad request. Please check your input.';
@@ -163,7 +155,6 @@ class NetworkHelper {
     }
   }
 
-  /// Safe JSON decode with error handling
   static Map<String, dynamic>? safeJsonDecode(String body) {
     try {
       final decoded = jsonDecode(body);

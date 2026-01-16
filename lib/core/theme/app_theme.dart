@@ -1,5 +1,5 @@
-/// Enterprise-level Theme Configuration
-/// Provides consistent theming across all platforms and device sizes
+
+
 library;
 
 import 'package:flutter/material.dart';
@@ -7,32 +7,26 @@ import 'package:flutter/services.dart';
 
 import '../utils/responsive_utils.dart';
 
-/// App color palette
 class AppThemeColors {
   AppThemeColors._();
 
-  // Primary Colors
   static const Color primary = Color(0xFFFB7B6F);
   static const Color primaryDark = Color(0xFFE85A4F);
   static const Color primaryLight = Color(0xFFFFABA3);
 
-  // Secondary Colors
   static const Color secondary = Color(0xFF98D4BB);
   static const Color secondaryDark = Color(0xFF6FB99D);
   static const Color secondaryLight = Color(0xFFC4E8DA);
 
-  // Accent Colors
   static const Color accent = Color(0xFFFFC857);
   static const Color accentDark = Color(0xFFE0A820);
   static const Color accentLight = Color(0xFFFFE08A);
 
-  // Semantic Colors
   static const Color success = Color(0xFF4CAF50);
   static const Color warning = Color(0xFFFF9800);
   static const Color error = Color(0xFFF44336);
   static const Color info = Color(0xFF2196F3);
 
-  // Neutral Colors
   static const Color background = Color(0xFFF8F9FA);
   static const Color backgroundDark = Color(0xFF1A1A2E);
   static const Color surface = Color(0xFFFFFFFF);
@@ -40,20 +34,17 @@ class AppThemeColors {
   static const Color card = Color(0xFFFFFFFF);
   static const Color cardDark = Color(0xFF2D2D4A);
 
-  // Text Colors
   static const Color textPrimary = Color(0xFF1A1A2E);
   static const Color textSecondary = Color(0xFF6C757D);
   static const Color textDisabled = Color(0xFFADB5BD);
   static const Color textPrimaryDark = Color(0xFFF8F9FA);
   static const Color textSecondaryDark = Color(0xFFADB5BD);
 
-  // Border Colors
   static const Color border = Color(0xFFE9ECEF);
   static const Color borderDark = Color(0xFF3D3D5C);
   static const Color divider = Color(0xFFDEE2E6);
   static const Color dividerDark = Color(0xFF3D3D5C);
 
-  // Gradient Colors
   static const List<Color> primaryGradient = [
     Color(0xFFFB7B6F),
     Color(0xFFFFABA3),
@@ -75,11 +66,9 @@ class AppThemeColors {
   ];
 }
 
-/// Enterprise theme data builder
 class AppTheme {
   AppTheme._();
 
-  /// Light theme
   static ThemeData light() => ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
@@ -222,7 +211,6 @@ class AppTheme {
         ),
       );
 
-  /// Dark theme
   static ThemeData dark() => ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
@@ -368,20 +356,17 @@ class AppTheme {
       );
 }
 
-/// Extension for easy theme access
 extension ThemeContextExtension on BuildContext {
   ThemeData get theme => Theme.of(this);
   ColorScheme get colorScheme => Theme.of(this).colorScheme;
   TextTheme get textTheme => Theme.of(this).textTheme;
   bool get isDark => Theme.of(this).brightness == Brightness.dark;
 
-  // Colors
   Color get primaryColor => colorScheme.primary;
   Color get secondaryColor => colorScheme.secondary;
   Color get surfaceColor => colorScheme.surface;
   Color get errorColor => colorScheme.error;
 
-  // Responsive shortcuts
   DeviceType get deviceType => ResponsiveUtils.getDeviceType(this);
   bool get isMobile => deviceType == DeviceType.mobile;
   bool get isTablet => deviceType == DeviceType.tablet;

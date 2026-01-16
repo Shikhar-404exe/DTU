@@ -1,5 +1,6 @@
-// filepath: lib/screens/teacher/student_management_screen.dart
-/// Student Management - Add, edit, view students
+
+
+library;
 
 import 'package:flutter/material.dart';
 import '../../main.dart';
@@ -62,7 +63,6 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
         _students.add(result);
         await TeacherDataService.saveStudents(_students);
 
-        // Add student ID to class's studentIds array
         final classIndex = classes.indexWhere((c) => c.id == result.classId);
         if (classIndex >= 0) {
           final updatedClass = classes[classIndex];
@@ -100,9 +100,8 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
         _students[index] = result;
         await TeacherDataService.saveStudents(_students);
 
-        // If class changed, update studentIds in both old and new classes
         if (oldStudent.classId != result.classId) {
-          // Remove from old class
+
           final oldClassIndex =
               classes.indexWhere((c) => c.id == oldStudent.classId);
           if (oldClassIndex >= 0) {
@@ -117,7 +116,6 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
             );
           }
 
-          // Add to new class
           final newClassIndex =
               classes.indexWhere((c) => c.id == result.classId);
           if (newClassIndex >= 0) {
@@ -165,7 +163,6 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
       _students.removeAt(index);
       await TeacherDataService.saveStudents(_students);
 
-      // Remove student ID from class's studentIds array
       final classes = await TeacherDataService.getClasses();
       final classIndex = classes.indexWhere((c) => c.id == student.classId);
       if (classIndex >= 0) {
@@ -355,7 +352,7 @@ class _StudentDialogState extends State<_StudentDialog> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: _selectedClassId,
+            initialValue: _selectedClassId,
             decoration: const InputDecoration(labelText: 'Class'),
             items: widget.classes.map((cls) {
               return DropdownMenuItem(

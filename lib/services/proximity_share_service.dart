@@ -1,5 +1,5 @@
-/// Unified proximity sharing service
-/// Orchestrates Bluetooth and WiFi Direct for seamless note sharing
+
+
 library;
 
 import 'dart:async';
@@ -9,14 +9,12 @@ import '../models/note.dart';
 import 'bluetooth_share_service.dart';
 import 'wifi_direct_share_service.dart';
 
-/// Sharing mode selection
 enum ShareMode {
-  bluetooth, // Slower, longer range (10-100m), lower power
-  wifiDirect, // Faster, shorter range (10-50m), higher power
-  auto, // Automatically select best mode
+  bluetooth,
+  wifiDirect,
+  auto,
 }
 
-/// Proximity sharing state
 enum ProximityShareState {
   idle,
   initializing,
@@ -28,7 +26,6 @@ enum ProximityShareState {
   error,
 }
 
-/// Unified device for both Bluetooth and WiFi
 class ProximityDevice {
   final String id;
   final String name;
@@ -43,8 +40,6 @@ class ProximityDevice {
   });
 }
 
-/// Unified proximity sharing service
-/// Manages both Bluetooth and WiFi Direct simultaneously
 class ProximityShareService {
   final BluetoothShareService _bluetoothService;
   final WiFiDirectShareService _wifiService;
@@ -58,7 +53,6 @@ class ProximityShareService {
   ProximityShareState _currentState = ProximityShareState.idle;
   ShareMode _preferredMode = ShareMode.auto;
 
-  // Streams
   Stream<ProximityShareState> get stateStream => _stateController.stream;
   Stream<List<ProximityDevice>> get devicesStream => _devicesController.stream;
   Stream<Note> get receivedNotesStream => _receivedNotesController.stream;
@@ -74,19 +68,16 @@ class ProximityShareService {
     _setupListeners();
   }
 
-  /// Setup listeners for sub-services
   void _setupListeners() {
-    // Bluetooth device updates
+
     _bluetoothService.devicesStream.listen((devices) {
       _updateDevicesList();
     });
 
-    // WiFi received notes
     _wifiService.receivedNotesStream.listen((note) {
       _receivedNotesController.add(note);
     });
 
-    // Error handling
     _bluetoothService.errorStream.listen((error) {
       _errorController.add('Bluetooth: $error');
     });
@@ -96,13 +87,12 @@ class ProximityShareService {
     });
   }
 
-  /// Initialize both services
   Future<bool> initialize({ShareMode preferredMode = ShareMode.auto}) async {
     _updateState(ProximityShareState.initializing);
     _preferredMode = preferredMode;
 
     try {
-      // Initialize both services in parallel
+
       final results = await Future.wait([
         _bluetoothService.initialize(),
         _wifiService.initialize(),
@@ -129,8 +119,6 @@ class ProximityShareService {
     }
   }
 
-  /// Start as sender (Teacher mode)
-  /// Broadcasts via both Bluetooth and WiFi for maximum reach
   Future<bool> startSending() async {
     if (_currentState != ProximityShareState.ready) {
       return false;
@@ -139,7 +127,7 @@ class ProximityShareService {
     _updateState(ProximityShareState.broadcasting);
 
     try {
-      // Start both services
+
       final results = await Future.wait([
         _bluetoothService.startBroadcasting(),
         _wifiService.startAsSender(),
@@ -167,8 +155,6 @@ class ProximityShareService {
     }
   }
 
-  /// Start as receiver (Student mode)
-  /// Discovers teachers via both Bluetooth and WiFi
   Future<bool> startReceiving() async {
     if (_currentState != ProximityShareState.ready) {
       return false;
@@ -177,7 +163,7 @@ class ProximityShareService {
     _updateState(ProximityShareState.discovering);
 
     try {
-      // Start discovery on both services
+
       final results = await Future.wait([
         _bluetoothService.startDiscovery(),
         _wifiService.startAsReceiver(),
@@ -198,15 +184,12 @@ class ProximityShareService {
     }
   }
 
-  /// Send note to all connected devices
-  /// Uses both Bluetooth and WiFi for maximum coverage
   Future<void> sendNoteToAll(Note note) async {
     _updateState(ProximityShareState.transferring);
 
     try {
       debugPrint('📤 Sending note via proximity share: ${note.topic}');
 
-      // Send via both channels simultaneously
       await Future.wait([
         _bluetoothService.sendNoteToAll(note),
         _wifiService.broadcastNote(note),
@@ -221,22 +204,19 @@ class ProximityShareService {
     }
   }
 
-  /// Connect to specific device (Student connects to Teacher)
   Future<bool> connectToDevice(ProximityDevice device) async {
     if (device.mode == ShareMode.bluetooth) {
       return await _bluetoothService.connectToDevice(device.id);
     } else if (device.mode == ShareMode.wifiDirect) {
-      // WiFi Direct connection happens automatically when on same network
+
       return true;
     }
     return false;
   }
 
-  /// Update unified devices list from both services
   void _updateDevicesList() {
     final devices = <ProximityDevice>[];
 
-    // Add Bluetooth devices
     for (final btDevice in _bluetoothService.discoveredDevices) {
       devices.add(ProximityDevice(
         id: btDevice.id,
@@ -246,7 +226,6 @@ class ProximityShareService {
       ));
     }
 
-    // Add WiFi Direct devices (if hotspot is active)
     if (_wifiService.hotspotConfig != null) {
       final config = _wifiService.hotspotConfig!;
       devices.add(ProximityDevice(
@@ -260,7 +239,6 @@ class ProximityShareService {
     _devicesController.add(devices);
   }
 
-  /// Get sharing statistics
   Map<String, dynamic> getStatistics() {
     return {
       'bluetooth_devices': _bluetoothService.discoveredDevices.length,
@@ -274,13 +252,11 @@ class ProximityShareService {
     };
   }
 
-  /// Update state
   void _updateState(ProximityShareState newState) {
     _currentState = newState;
     _stateController.add(newState);
   }
 
-  /// Stop all services
   Future<void> stop() async {
     await Future.wait([
       _bluetoothService.stop(),
@@ -289,7 +265,6 @@ class ProximityShareService {
     _updateState(ProximityShareState.idle);
   }
 
-  /// Dispose resources
   void dispose() {
     stop();
     _bluetoothService.dispose();

@@ -1,8 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 
-/// 📄 Note View Screen
-/// Opens and displays the saved note content from file.
 class NoteViewScreen extends StatelessWidget {
   final String filePath;
 
@@ -24,18 +22,18 @@ class NoteViewScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("View Note"),
         centerTitle: true,
-        backgroundColor: Colors.white.withAlpha(217), // ~0.85 opacity
+        backgroundColor: Colors.white.withAlpha(217),
         foregroundColor: Colors.black87,
         elevation: 1,
       ),
       body: Container(
-        color: const Color(0xFFFFDAD0), // solid pastel salmon
+        color: const Color(0xFFFFDAD0),
         padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(230), // ~0.9 opacity
+              color: Colors.white.withAlpha(230),
               borderRadius: BorderRadius.circular(24),
               boxShadow: const [
                 BoxShadow(

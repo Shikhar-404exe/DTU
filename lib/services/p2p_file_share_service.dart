@@ -8,9 +8,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
-/// Wi-Fi Hotspot Helper
 class WiFiHelper {
-  /// Check if device is connected to Wi-Fi
+
   static Future<bool> isConnectedToWiFi() async {
     try {
       final info = NetworkInfo();
@@ -21,7 +20,6 @@ class WiFiHelper {
     }
   }
 
-  /// Get current Wi-Fi IP address
   static Future<String?> getWiFiIP() async {
     try {
       final info = NetworkInfo();
@@ -31,7 +29,6 @@ class WiFiHelper {
     }
   }
 
-  /// Get Wi-Fi SSID (network name)
   static Future<String?> getWiFiName() async {
     try {
       final info = NetworkInfo();
@@ -41,7 +38,6 @@ class WiFiHelper {
     }
   }
 
-  /// Get hotspot setup instructions
   static String getHotspotInstructions() {
     return '''📱 Hotspot Setup Instructions:
 
@@ -64,14 +60,13 @@ Alternatives:
   }
 }
 
-/// Info about the hosting side (sender) for P2P file sharing.
 class P2PHostInfo {
   final String sessionId;
   final String ip;
   final int port;
   final String fileName;
   final int fileSize;
-  final String? networkName; // Wi-Fi SSID or hotspot name
+  final String? networkName;
 
   P2PHostInfo({
     required this.sessionId,
@@ -105,23 +100,15 @@ class P2PHostInfo {
   }
 }
 
-/// Simple HTTP-based P2P file transfer over local Wi-Fi / hotspot.
-/// - Sender starts a small HttpServer hosting the file.
-/// - QR contains ip/port/sessionId.
-/// - Receiver downloads via HTTP using that info.
-/// No internet required, only local network.
 class P2PFileShareService {
   static HttpServer? _server;
   static String? _currentSessionId;
   static File? _currentFile;
 
-  /// Start hosting [file] on a random free port.
-  /// Returns [P2PHostInfo] used to build handshake QR.
   static Future<P2PHostInfo> startHosting(File file) async {
-    // Stop any previous server.
+
     await stopHosting();
 
-    // Check if connected to Wi-Fi
     final isConnected = await WiFiHelper.isConnectedToWiFi();
     if (!isConnected) {
       debugPrint('⚠️ Warning: Not connected to Wi-Fi. P2P may not work.');
@@ -135,13 +122,12 @@ class P2PFileShareService {
 
     final server = await HttpServer.bind(
       InternetAddress.anyIPv4,
-      0, // random free port
+      0,
     );
     _server = server;
 
     debugPrint('🌐 P2P Server started on port ${server.port}');
 
-    // Start listening (simple single-file HTTP endpoint).
     _server!.listen((HttpRequest request) async {
       try {
         if (request.uri.path == '/file/$_currentSessionId') {
@@ -180,7 +166,6 @@ class P2PFileShareService {
       }
     });
 
-    // Determine IP to advertise.
     String? ip;
     String? networkName;
     try {
@@ -191,7 +176,7 @@ class P2PFileShareService {
       ip = null;
       networkName = null;
     }
-    // Fallback to bound address.
+
     ip ??= server.address.address;
 
     final size = await file.length();
@@ -210,8 +195,6 @@ class P2PFileShareService {
     );
   }
 
-  /// Start hosting a file from its path.
-  /// Convenience method that creates a File from path.
   static Future<P2PHostInfo> startHostingPath(String filePath) async {
     final file = File(filePath);
     if (!await file.exists()) {
@@ -220,7 +203,6 @@ class P2PFileShareService {
     return startHosting(file);
   }
 
-  /// Stop hosting file, if any.
   static Future<void> stopHosting() async {
     try {
       await _server?.close(force: true);
@@ -230,8 +212,6 @@ class P2PFileShareService {
     _currentFile = null;
   }
 
-  /// Download a file from [ip]:[port]/file/[sessionId] and save locally.
-  /// Returns the saved File.
   static Future<File> downloadFile({
     required String ip,
     required int port,
@@ -271,7 +251,6 @@ class P2PFileShareService {
     }
   }
 
-  /// Format file size for display
   static String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';

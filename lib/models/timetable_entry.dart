@@ -3,9 +3,9 @@ class TimetableEntry {
   final String subject;
   final String teacher;
   final String room;
-  final int weekday; // 1=Mon..7=Sun
-  final String startTime; // "09:30"
-  final String endTime;   // "10:15"
+  final int weekday;
+  final String startTime;
+  final String endTime;
 
   TimetableEntry({
     required this.id,

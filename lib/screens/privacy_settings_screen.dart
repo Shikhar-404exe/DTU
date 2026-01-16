@@ -1,6 +1,5 @@
-/// Privacy Settings Screen
-/// Allows users to manage their privacy preferences and exercise their rights
-/// GDPR/DPDP Act compliant
+
+
 library;
 
 import 'dart:convert';
@@ -63,29 +62,25 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Consent Status Card
+
                   _buildConsentStatusCard(isDark),
                   const SizedBox(height: 20),
 
-                  // Consent Preferences
                   _buildSectionTitle('Consent Preferences', isDark),
                   const SizedBox(height: 12),
                   _buildConsentPreferences(isDark),
                   const SizedBox(height: 24),
 
-                  // Data Rights
                   _buildSectionTitle('Your Data Rights', isDark),
                   const SizedBox(height: 12),
                   _buildDataRightsSection(isDark),
                   const SizedBox(height: 24),
 
-                  // Security Info
                   _buildSectionTitle('Security', isDark),
                   const SizedBox(height: 12),
                   _buildSecurityInfo(isDark),
                   const SizedBox(height: 24),
 
-                  // Danger Zone
                   _buildSectionTitle('Danger Zone', isDark),
                   const SizedBox(height: 12),
                   _buildDangerZone(isDark),
@@ -617,7 +612,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                         itemCount: logs.length,
                         itemBuilder: (context, index) {
                           final log =
-                              logs[logs.length - 1 - index]; // Reverse order
+                              logs[logs.length - 1 - index];
                           return Container(
                             margin: const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.all(12),
@@ -971,7 +966,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
     );
 
     if (confirmed == true) {
-      // Double confirmation for destructive action
+
       final doubleConfirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
@@ -1006,7 +1001,6 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
               ),
             );
 
-            // Navigate to login screen
             await Future.delayed(const Duration(seconds: 2));
             if (mounted) {
               Navigator.of(context)

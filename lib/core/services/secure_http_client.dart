@@ -1,5 +1,5 @@
-/// Secure HTTP Client Service
-/// Provides security-hardened HTTP requests with validation
+
+
 library;
 
 import 'dart:convert';
@@ -9,7 +9,6 @@ import 'package:http/http.dart' as http;
 
 import '../utils/security_helper.dart';
 
-/// Secure HTTP client with built-in security measures
 class SecureHttpClient {
   SecureHttpClient._();
 
@@ -17,25 +16,21 @@ class SecureHttpClient {
   static const int _maxRetries = 3;
   static const Duration _retryDelay = Duration(seconds: 2);
 
-  // Whitelist of allowed domains (configure per environment)
   static final List<String> _allowedDomains = [
     'localhost',
     '127.0.0.1',
-    '192.168.', // Local network
-    '172.17.', // Local network
-    '10.', // Local network
-    'api.gemini.google.com',
-    'generativelanguage.googleapis.com',
+    '192.168.',
+    '172.17.',
+    '10.',
+    'openrouter.ai',
     'firebase.googleapis.com',
     'firebaseapp.com',
   ];
 
-  /// Validate URL is safe and from allowed domain
   static bool _isUrlAllowed(String url) {
     try {
       final uri = Uri.parse(url);
 
-      // Must be http or https
       if (uri.scheme != 'http' && uri.scheme != 'https') {
         SecurityHelper.logSecurityEvent('Blocked non-HTTP scheme', details: {
           'scheme': uri.scheme,
@@ -44,16 +39,13 @@ class SecureHttpClient {
         return false;
       }
 
-      // Check if domain is in whitelist
       final host = uri.host.toLowerCase();
 
-      // Allow localhost and IPs for development
       if (kDebugMode) {
-        // More permissive in debug mode for local testing
+
         return true;
       }
 
-      // Production: strict domain whitelist
       for (var allowed in _allowedDomains) {
         if (host.contains(allowed)) {
           return true;
@@ -71,7 +63,6 @@ class SecureHttpClient {
     }
   }
 
-  /// Sanitize request body
   static Map<String, dynamic> _sanitizeBody(Map<String, dynamic> body) {
     final sanitized = <String, dynamic>{};
 
@@ -80,15 +71,15 @@ class SecureHttpClient {
       final value = entry.value;
 
       if (value is String) {
-        // Check for SQL injection
+
         if (SecurityHelper.containsSQLInjection(value)) {
-          SecurityHelper.logSecurityEvent('SQL injection attempt blocked', details: {
-            'field': key,
-          });
-          continue; // Skip this field
+          SecurityHelper.logSecurityEvent('SQL injection attempt blocked',
+              details: {
+                'field': key,
+              });
+          continue;
         }
 
-        // Sanitize input
         sanitized[key] = SecurityHelper.sanitizeInput(value);
       } else {
         sanitized[key] = value;
@@ -98,7 +89,6 @@ class SecureHttpClient {
     return sanitized;
   }
 
-  /// POST request with security validation
   static Future<http.Response> post({
     required String url,
     Map<String, String>? headers,
@@ -107,16 +97,14 @@ class SecureHttpClient {
     bool sanitizeBody = true,
     int retries = 0,
   }) async {
-    // Validate URL
+
     if (!_isUrlAllowed(url)) {
       throw SecurityException('URL not allowed: $url');
     }
 
-    // Sanitize body if enabled
     final sanitizedBody =
         sanitizeBody && body != null ? _sanitizeBody(body) : body;
 
-    // Add default headers
     final secureHeaders = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -138,12 +126,11 @@ class SecureHttpClient {
           )
           .timeout(timeout);
 
-      // Validate response
       _validateResponse(response);
 
       return response;
     } on SocketException catch (e) {
-      // Network error - retry if configured
+
       if (retries < _maxRetries) {
         debugPrint('Network error, retrying (${retries + 1}/$_maxRetries)...');
         await Future.delayed(_retryDelay);
@@ -174,19 +161,17 @@ class SecureHttpClient {
     }
   }
 
-  /// GET request with security validation
   static Future<http.Response> get({
     required String url,
     Map<String, String>? headers,
     Duration timeout = _defaultTimeout,
     int retries = 0,
   }) async {
-    // Validate URL
+
     if (!_isUrlAllowed(url)) {
       throw SecurityException('URL not allowed: $url');
     }
 
-    // Add default headers
     final secureHeaders = {
       'Accept': 'application/json',
       'User-Agent': 'VidyarthiApp/1.0',
@@ -205,12 +190,11 @@ class SecureHttpClient {
           )
           .timeout(timeout);
 
-      // Validate response
       _validateResponse(response);
 
       return response;
     } on SocketException catch (e) {
-      // Network error - retry if configured
+
       if (retries < _maxRetries) {
         debugPrint('Network error, retrying (${retries + 1}/$_maxRetries)...');
         await Future.delayed(_retryDelay);
@@ -234,18 +218,16 @@ class SecureHttpClient {
     }
   }
 
-  /// Validate HTTP response for security issues
   static void _validateResponse(http.Response response) {
-    // Check for suspicious response sizes
+
     if (response.body.length > 10 * 1024 * 1024) {
-      // 10MB
+
       SecurityHelper.logSecurityEvent('Unusually large response', details: {
         'size_bytes': response.body.length,
         'status': response.statusCode,
       });
     }
 
-    // Log non-success status codes
     if (response.statusCode >= 400) {
       SecurityHelper.logSecurityEvent('HTTP error response', details: {
         'status': response.statusCode,
@@ -257,7 +239,6 @@ class SecureHttpClient {
     }
   }
 
-  /// Parse JSON response securely
   static Map<String, dynamic> parseJsonResponse(http.Response response) {
     try {
       final decoded = jsonDecode(response.body);
@@ -280,7 +261,6 @@ class SecureHttpClient {
   }
 }
 
-/// Security exception
 class SecurityException implements Exception {
   final String message;
 
@@ -289,4 +269,3 @@ class SecurityException implements Exception {
   @override
   String toString() => 'SecurityException: $message';
 }
-

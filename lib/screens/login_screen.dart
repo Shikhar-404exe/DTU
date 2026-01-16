@@ -34,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _selectedLang = code;
       });
     } catch (e) {
-      // Fallback to English if preferences fail
+
       debugPrint('Failed to load language preference: $e');
     }
   }
@@ -101,20 +101,20 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // Theme toggle button at top right
+
           Positioned(
             top: MediaQuery.of(context).padding.top + 12,
             right: 16,
             child: Container(
               decoration: BoxDecoration(
                 color: isDark
-                    ? AppColors.cardDark.withAlpha(204) // ~0.8 opacity
+                    ? AppColors.cardDark.withAlpha(204)
                     : Colors.white.withAlpha(204),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
                     color: (isDark ? Colors.black : AppColors.salmon)
-                        .withAlpha(51), // ~0.2 opacity
+                        .withAlpha(51),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -138,16 +138,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     onChanged: (value) => themeScope.setDarkMode(value),
                     activeThumbColor: AppColors.salmonDark,
                     activeTrackColor:
-                        AppColors.salmonDark.withAlpha(102), // ~0.4 opacity
+                        AppColors.salmonDark.withAlpha(102),
                     inactiveThumbColor: AppColors.salmon,
                     inactiveTrackColor:
-                        AppColors.salmon.withAlpha(77), // ~0.3 opacity
+                        AppColors.salmon.withAlpha(77),
                   ),
                 ],
               ),
             ),
           ),
-          // Main content
+
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -178,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       boxShadow: [
                         BoxShadow(
                           color: (isDark ? Colors.black : AppColors.salmon)
-                              .withAlpha(51), // ~0.2 opacity
+                              .withAlpha(51),
                           blurRadius: 24,
                           offset: const Offset(0, 12),
                         ),
@@ -193,14 +193,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           decoration: BoxDecoration(
                             color: isDark
                                 ? AppColors.cardDark
-                                    .withAlpha(230) // ~0.9 opacity
+                                    .withAlpha(230)
                                 : Colors.white.withAlpha(230),
                             borderRadius: BorderRadius.circular(36),
                             border: Border.all(
                               color: isDark
                                   ? AppColors.salmonDark
-                                      .withAlpha(77) // ~0.3 opacity
-                                  : Colors.white.withAlpha(179), // ~0.7 opacity
+                                      .withAlpha(77)
+                                  : Colors.white.withAlpha(179),
                               width: 1.2,
                             ),
                           ),
@@ -337,21 +337,21 @@ class _LoginScreenState extends State<LoginScreen> {
           color: selected
               ? (isDark ? AppColors.salmonDark : AppColors.salmon)
               : (isDark
-                  ? AppColors.mintDark.withAlpha(77) // ~0.3 opacity
-                  : AppColors.mint.withAlpha(128)), // ~0.5 opacity
+                  ? AppColors.mintDark.withAlpha(77)
+                  : AppColors.mint.withAlpha(128)),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: selected
                 ? (isDark ? AppColors.salmonDark : AppColors.salmon)
                 : (isDark
-                    ? AppColors.mintDark.withAlpha(102) // ~0.4 opacity
-                    : Colors.white.withAlpha(153)), // ~0.6 opacity
+                    ? AppColors.mintDark.withAlpha(102)
+                    : Colors.white.withAlpha(153)),
           ),
           boxShadow: selected
               ? [
                   BoxShadow(
                     color: (isDark ? AppColors.salmonDark : AppColors.salmon)
-                        .withAlpha(77), // ~0.3 opacity
+                        .withAlpha(77),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),

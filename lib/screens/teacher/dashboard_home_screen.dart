@@ -1,5 +1,6 @@
-// filepath: lib/screens/teacher/dashboard_home_screen.dart
-/// Teacher Dashboard Home - Quick overview and actions
+
+
+library;
 
 import 'dart:ui';
 
@@ -89,12 +90,11 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
 
   Future<void> _logout() async {
     try {
-      // Clear user role from preferences
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('user_role');
       await prefs.remove('token');
 
-      // Sign out from Firebase
       try {
         await FirebaseAuthService.instance.signOut();
       } catch (e) {
@@ -102,7 +102,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
       }
 
       if (mounted) {
-        // Navigate to login screen and remove all previous routes
+
         Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
       }
     } catch (e) {
@@ -124,7 +124,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 20),
-                // Profile Photo with Edit Button
+
                 Stack(
                   alignment: Alignment.bottomRight,
                   children: [
@@ -202,7 +202,6 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                 Divider(color: isDark ? Colors.white24 : Colors.black12),
                 const SizedBox(height: 16),
 
-                // Language Selection
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -232,7 +231,6 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                 Divider(color: isDark ? Colors.white24 : Colors.black12),
                 const SizedBox(height: 16),
 
-                // Logout Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -336,7 +334,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
               color: isDark ? AppColors.textDarkMode : Colors.black87,
             ),
             onPressed: () async {
-              // Navigate to student app, preserving teacher dashboard in stack
+
               await Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -345,7 +343,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                   ),
                 ),
               );
-              // When returning, reload stats
+
               if (mounted) {
                 _loadStats();
               }
@@ -372,7 +370,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Stats Cards
+
                   Row(
                     children: [
                       Expanded(
@@ -399,7 +397,6 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Quick Actions
                   Text(
                     t(context, 'quick_actions'),
                     style: TextStyle(
@@ -422,7 +419,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                       ),
                     ).then((_) {
                       _loadStats();
-                      setState(() {}); // Refresh the entire page
+                      setState(() {});
                     }),
                     isDark: isDark,
                   ),
@@ -442,7 +439,6 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Student Cards Section
                   Text(
                     t(context, 'student_overview'),
                     style: TextStyle(
@@ -577,7 +573,6 @@ class _ActionCard extends StatelessWidget {
   }
 }
 
-/// Student Cards Section with Analytics
 class _StudentCardsSection extends StatefulWidget {
   final bool isDark;
 
@@ -648,7 +643,6 @@ class _StudentCardsSectionState extends State<_StudentCardsSection> {
       _students.removeAt(index);
       await TeacherDataService.saveStudents(_students);
 
-      // Remove student ID from class's studentIds array
       final classes = await TeacherDataService.getClasses();
       final classIndex = classes.indexWhere((c) => c.id == student.classId);
       if (classIndex >= 0) {
@@ -704,8 +698,7 @@ class _StudentCardsSectionState extends State<_StudentCardsSection> {
             ? 0.0
             : student.marks.values.reduce((a, b) => a + b) /
                 student.marks.length;
-        // Calculate attendance percentage - if no attendance data, show 0%
-        // Otherwise show percentage of days present
+
         final attendancePercent = student.attendanceDates.isEmpty
             ? 0.0
             : (student.attendanceDates.length /
@@ -876,7 +869,7 @@ class _StudentAnalyticsDialog extends StatelessWidget {
     final avgMarks = student.marks.isEmpty
         ? 0.0
         : student.marks.values.reduce((a, b) => a + b) / student.marks.length;
-    // More accurate attendance calculation
+
     final totalAttendanceDays = student.attendanceDates.length;
     final attendancePercent = totalAttendanceDays == 0
         ? 0.0

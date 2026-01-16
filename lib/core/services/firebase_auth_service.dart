@@ -1,5 +1,5 @@
-/// Enterprise-level Firebase Authentication Service
-/// Provides secure, robust authentication with comprehensive error handling
+
+
 library;
 
 import 'dart:async';
@@ -11,7 +11,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../exceptions/app_exceptions.dart';
 
-/// User model for the app
 class AppUser {
   final String uid;
   final String? email;
@@ -69,7 +68,6 @@ class AppUser {
   String toString() => 'AppUser(uid: $uid, email: $email, isGuest: $isGuest)';
 }
 
-/// Authentication state
 enum AuthState {
   initial,
   authenticated,
@@ -78,7 +76,6 @@ enum AuthState {
   error,
 }
 
-/// Firebase Authentication Service with enterprise-level error handling
 class FirebaseAuthService {
   static FirebaseAuthService? _instance;
   static FirebaseAuthService get instance {
@@ -90,22 +87,18 @@ class FirebaseAuthService {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Stream controller for auth state
   final _authStateController = StreamController<AuthState>.broadcast();
   Stream<AuthState> get authStateStream => _authStateController.stream;
 
-  // Current user
   AppUser? _currentUser;
   AppUser? get currentUser => _currentUser;
 
-  // Auth state
   AuthState _authState = AuthState.initial;
   AuthState get authState => _authState;
 
-  /// Initialize the auth service
   Future<void> initialize() async {
     try {
-      // Listen to Firebase auth state changes
+
       _auth.authStateChanges().listen((User? user) {
         if (user != null) {
           _currentUser = AppUser.fromFirebaseUser(user);
@@ -116,13 +109,12 @@ class FirebaseAuthService {
         }
       });
 
-      // Check if user is already logged in
       final user = _auth.currentUser;
       if (user != null) {
         _currentUser = AppUser.fromFirebaseUser(user);
         _setAuthState(AuthState.authenticated);
       } else {
-        // Check for guest session
+
         final prefs = await SharedPreferences.getInstance();
         final isGuest = prefs.getBool(AppConstants.guestKey) ?? false;
         if (isGuest) {
@@ -149,7 +141,6 @@ class FirebaseAuthService {
     _authStateController.add(state);
   }
 
-  /// Sign in with email and password
   Future<Result<AppUser>> signInWithEmailAndPassword({
     required String email,
     required String password,
@@ -157,14 +148,12 @@ class FirebaseAuthService {
     try {
       _setAuthState(AuthState.loading);
 
-      // Validate inputs
       final validationError = _validateCredentials(email, password);
       if (validationError != null) {
         _setAuthState(AuthState.unauthenticated);
         return Result.failure(validationError);
       }
 
-      // Attempt sign in
       final credential = await _auth
           .signInWithEmailAndPassword(
             email: email.trim(),
@@ -186,7 +175,6 @@ class FirebaseAuthService {
         ));
       }
 
-      // Save session
       await _saveSession(credential.user!);
 
       _currentUser = AppUser.fromFirebaseUser(credential.user!);
@@ -210,7 +198,6 @@ class FirebaseAuthService {
     }
   }
 
-  /// Create account with email and password
   Future<Result<AppUser>> createAccountWithEmailAndPassword({
     required String email,
     required String password,
@@ -218,14 +205,12 @@ class FirebaseAuthService {
     try {
       _setAuthState(AuthState.loading);
 
-      // Validate inputs
       final validationError = _validateCredentials(email, password);
       if (validationError != null) {
         _setAuthState(AuthState.unauthenticated);
         return Result.failure(validationError);
       }
 
-      // Attempt registration
       final credential = await _auth
           .createUserWithEmailAndPassword(
             email: email.trim(),
@@ -247,7 +232,6 @@ class FirebaseAuthService {
         ));
       }
 
-      // Save session
       await _saveSession(credential.user!);
 
       _currentUser = AppUser.fromFirebaseUser(credential.user!);
@@ -271,12 +255,10 @@ class FirebaseAuthService {
     }
   }
 
-  /// Continue as guest (using Firebase Anonymous Auth)
   Future<Result<AppUser>> continueAsGuest() async {
     try {
       _setAuthState(AuthState.loading);
 
-      // Try Firebase Anonymous sign-in first
       try {
         final credential = await _auth.signInAnonymously().timeout(
               AppConstants.networkTimeout,
@@ -289,7 +271,6 @@ class FirebaseAuthService {
         if (credential.user != null) {
           _currentUser = AppUser.fromFirebaseUser(credential.user!);
 
-          // Save guest session
           final prefs = await SharedPreferences.getInstance();
           await prefs.setBool(AppConstants.guestKey, true);
 
@@ -300,10 +281,8 @@ class FirebaseAuthService {
         debugPrint('Firebase anonymous auth failed, using local guest: $e');
       }
 
-      // Fallback to local guest if Firebase anonymous fails
       final guestUser = AppUser.guest();
 
-      // Save guest session
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(AppConstants.guestKey, true);
       await prefs.remove(AppConstants.tokenKey);
@@ -324,12 +303,10 @@ class FirebaseAuthService {
     }
   }
 
-  /// Sign in with Google
   Future<Result<AppUser>> signInWithGoogle() async {
     try {
       _setAuthState(AuthState.loading);
 
-      // For web, use popup
       if (kIsWeb) {
         final googleProvider = GoogleAuthProvider();
         googleProvider.addScope('email');
@@ -358,7 +335,6 @@ class FirebaseAuthService {
         return Result.success(_currentUser!);
       }
 
-      // For mobile platforms, use google_sign_in package
       final GoogleSignIn googleSignIn = GoogleSignIn(
         scopes: ['email', 'profile'],
       );
@@ -366,7 +342,7 @@ class FirebaseAuthService {
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
       if (googleUser == null) {
-        // User cancelled the sign-in
+
         _setAuthState(AuthState.unauthenticated);
         return Result.failure(const AuthException(
           message: 'Sign in cancelled',
@@ -418,7 +394,6 @@ class FirebaseAuthService {
     }
   }
 
-  /// Send password reset email
   Future<Result<void>> sendPasswordResetEmail(String email) async {
     try {
       if (!_isValidEmail(email)) {
@@ -449,7 +424,6 @@ class FirebaseAuthService {
     }
   }
 
-  /// Sign out
   Future<Result<void>> signOut() async {
     try {
       _setAuthState(AuthState.loading);
@@ -472,14 +446,11 @@ class FirebaseAuthService {
     }
   }
 
-  /// Check if user is authenticated
   bool get isAuthenticated =>
       _currentUser != null && _authState == AuthState.authenticated;
 
-  /// Check if user is guest
   bool get isGuest => _currentUser?.isGuest ?? false;
 
-  /// Reload current user data
   Future<void> reloadUser() async {
     try {
       await _auth.currentUser?.reload();
@@ -491,8 +462,6 @@ class FirebaseAuthService {
       debugPrint('Failed to reload user: $e');
     }
   }
-
-  // Private helpers
 
   ValidationException? _validateCredentials(String email, String password) {
     if (email.trim().isEmpty) {
@@ -602,7 +571,6 @@ class FirebaseAuthService {
     );
   }
 
-  /// Dispose resources
   void dispose() {
     _authStateController.close();
   }

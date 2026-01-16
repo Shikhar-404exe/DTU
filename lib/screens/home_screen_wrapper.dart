@@ -1,4 +1,4 @@
-// lib/screens/home_screen_wrapper.dart
+
 import 'dart:io';
 import 'dart:ui';
 
@@ -9,15 +9,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
 import 'home_screen.dart';
 import 'saved_notes_organized_screen.dart';
-import 'timetable_screen.dart';
+import 'doubts_screen.dart';
 import 'photomath_screen.dart';
 import 'note_scan_qr.dart';
 import 'profile_screen.dart';
+import 'agent_dashboard_screen.dart';
+import 'ai_chatbot_screen.dart';
 
 class HomeScreenWrapper extends StatefulWidget {
   const HomeScreenWrapper({super.key});
 
-  // Helper to access state from child widgets
   static _HomeScreenWrapperState of(BuildContext context) {
     final state = context.findAncestorStateOfType<_HomeScreenWrapperState>();
     if (state == null) {
@@ -35,11 +36,10 @@ class _HomeScreenWrapperState extends State<HomeScreenWrapper> {
   int _currentIndex = 0;
   String _profilePhotoPath = "";
 
-  // keep screens in the order of bottom nav
   final List<Widget> _screens = const [
     HomeScreen(),
     SavedNotesOrganizedScreen(),
-    TimetableScreen(),
+    DoubtsScreen(),
     PhotomathScreen(),
     NoteScanQR(),
   ];
@@ -62,7 +62,6 @@ class _HomeScreenWrapperState extends State<HomeScreenWrapper> {
     }
   }
 
-  // expose jumpTo for children to switch tabs while preserving the wrapper
   void jumpTo(int index) {
     if (index < 0 || index >= _screens.length) return;
     setState(() => _currentIndex = index);
@@ -71,12 +70,11 @@ class _HomeScreenWrapperState extends State<HomeScreenWrapper> {
   void _openProfileDrawer() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Open drawer from right side
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Profile Drawer',
-      barrierColor: Colors.black.withAlpha(77), // ~0.3 opacity
+      barrierColor: Colors.black.withAlpha(77),
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, animation, secondaryAnimation) {
         return Align(
@@ -91,17 +89,22 @@ class _HomeScreenWrapperState extends State<HomeScreenWrapper> {
                 MaterialPageRoute(builder: (_) => const ProfileScreen()),
               ).then((_) => _loadProfilePhoto());
             },
+            onAgentDashboard: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AgentDashboardScreen()),
+              );
+            },
             onLogout: () async {
               Navigator.pop(context);
 
-              // Sign out from Firebase
               try {
                 await FirebaseAuth.instance.signOut();
               } catch (e) {
                 debugPrint('Firebase signOut error: $e');
               }
 
-              // Clear local data
               final prefs = await SharedPreferences.getInstance();
               await prefs.remove('token');
               await prefs.setBool('guest', false);
@@ -120,7 +123,7 @@ class _HomeScreenWrapperState extends State<HomeScreenWrapper> {
       transitionBuilder: (context, animation, secondaryAnimation, child) {
         return SlideTransition(
           position: Tween<Offset>(
-            begin: const Offset(1, 0), // Slide from right
+            begin: const Offset(1, 0),
             end: Offset.zero,
           ).animate(CurvedAnimation(
             parent: animation,
@@ -134,28 +137,27 @@ class _HomeScreenWrapperState extends State<HomeScreenWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final File? imgFile =
         _profilePhotoPath.isNotEmpty ? File(_profilePhotoPath) : null;
     final hasPhoto = imgFile != null && imgFile.existsSync();
 
     return Scaffold(
       extendBody: true,
-      extendBodyBehindAppBar: true, // Allow body to extend behind app bar
+      extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.transparent, // Transparent to blend with body
+        backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         title: Text(
           t(context, 'app.title'),
           style: AppTextStyles.wordmark.copyWith(
-            color: isDark ? AppColors.textDarkMode : Colors.black87,
+            color: AppColors.textDark,
           ),
         ),
         centerTitle: true,
         actions: [
-          // Profile icon button
+
           GestureDetector(
             onTap: _openProfileDrawer,
             child: Container(
@@ -164,13 +166,12 @@ class _HomeScreenWrapperState extends State<HomeScreenWrapper> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: (isDark ? AppColors.salmonDark : AppColors.salmon)
-                        .withAlpha(102), // ~0.4 opacity
+                    color: AppColors.salmon.withAlpha(102),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
                   BoxShadow(
-                    color: Colors.black.withAlpha(26), // ~0.1 opacity
+                    color: Colors.black.withAlpha(26),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -178,8 +179,7 @@ class _HomeScreenWrapperState extends State<HomeScreenWrapper> {
               ),
               child: CircleAvatar(
                 radius: 18,
-                backgroundColor:
-                    isDark ? AppColors.salmonDark : AppColors.salmon,
+                backgroundColor: AppColors.salmon,
                 backgroundImage: hasPhoto ? FileImage(imgFile) : null,
                 child: !hasPhoto
                     ? const Icon(
@@ -194,6 +194,32 @@ class _HomeScreenWrapperState extends State<HomeScreenWrapper> {
         ],
       ),
       body: _screens[_currentIndex],
+
+      floatingActionButton: _currentIndex != 0
+          ? Container(
+              margin: const EdgeInsets.only(bottom: 70),
+              child: FloatingActionButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const GradientBackground(
+                        child: AIChatbotScreen(),
+                      ),
+                    ),
+                  );
+                },
+                backgroundColor: AppColors.salmon,
+                elevation: 8,
+                child: const Icon(
+                  Icons.psychology_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.only(
@@ -202,8 +228,7 @@ class _HomeScreenWrapperState extends State<HomeScreenWrapper> {
           ),
           boxShadow: [
             BoxShadow(
-              color: (isDark ? Colors.black : AppColors.salmon)
-                  .withAlpha(51), // ~0.2 opacity
+              color: AppColors.salmon.withAlpha(51),
               blurRadius: 16,
               offset: const Offset(0, -4),
             ),
@@ -220,14 +245,9 @@ class _HomeScreenWrapperState extends State<HomeScreenWrapper> {
               currentIndex: _currentIndex,
               onTap: (index) => setState(() => _currentIndex = index),
               type: BottomNavigationBarType.fixed,
-              backgroundColor: isDark
-                  ? AppColors.cardDark.withAlpha(230) // ~0.9 opacity
-                  : Colors.white.withAlpha(230),
-              selectedItemColor: isDark
-                  ? AppColors.salmonDark
-                  : const Color(0xFFE07B64), // darker salmon
-              unselectedItemColor:
-                  isDark ? AppColors.textLightDark : Colors.black54,
+              backgroundColor: Colors.white.withAlpha(240),
+              selectedItemColor: AppColors.salmon,
+              unselectedItemColor: AppColors.textLight,
               showUnselectedLabels: true,
               elevation: 0,
               items: const [
@@ -242,9 +262,9 @@ class _HomeScreenWrapperState extends State<HomeScreenWrapper> {
                   label: "Saved",
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.event_note_outlined),
-                  activeIcon: Icon(Icons.event_note),
-                  label: "Timetable",
+                  icon: Icon(Icons.help_outline_rounded),
+                  activeIcon: Icon(Icons.help_rounded),
+                  label: "Doubts",
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.calculate_outlined),
@@ -265,18 +285,19 @@ class _HomeScreenWrapperState extends State<HomeScreenWrapper> {
   }
 }
 
-/// Profile Drawer Widget - Slides from right
 class _ProfileDrawer extends StatelessWidget {
   final String photoPath;
   final bool isDark;
   final VoidCallback onProfileTap;
   final VoidCallback onLogout;
+  final VoidCallback? onAgentDashboard;
 
   const _ProfileDrawer({
     required this.photoPath,
     required this.isDark,
     required this.onProfileTap,
     required this.onLogout,
+    this.onAgentDashboard,
   });
 
   @override
@@ -299,12 +320,12 @@ class _ProfileDrawer extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: (isDark ? Colors.black : AppColors.salmon)
-                  .withAlpha(77), // ~0.3 opacity
+                  .withAlpha(77),
               blurRadius: 30,
               offset: const Offset(-10, 0),
             ),
             BoxShadow(
-              color: Colors.black.withAlpha(26), // ~0.1 opacity
+              color: Colors.black.withAlpha(26),
               blurRadius: 10,
               offset: const Offset(-4, 0),
             ),
@@ -316,7 +337,7 @@ class _ProfileDrawer extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Close button
+
                 Align(
                   alignment: Alignment.topRight,
                   child: GestureDetector(
@@ -326,7 +347,7 @@ class _ProfileDrawer extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: isDark
                             ? AppColors.backgroundDark
-                                .withAlpha(128) // ~0.5 opacity
+                                .withAlpha(128)
                             : AppColors.salmonLight.withAlpha(128),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -342,7 +363,6 @@ class _ProfileDrawer extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Profile avatar with 3D effect
                 Center(
                   child: Container(
                     decoration: BoxDecoration(
@@ -351,12 +371,12 @@ class _ProfileDrawer extends StatelessWidget {
                         BoxShadow(
                           color:
                               (isDark ? AppColors.salmonDark : AppColors.salmon)
-                                  .withAlpha(102), // ~0.4 opacity
+                                  .withAlpha(102),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
                         BoxShadow(
-                          color: Colors.black.withAlpha(26), // ~0.1 opacity
+                          color: Colors.black.withAlpha(26),
                           blurRadius: 6,
                           offset: const Offset(0, 3),
                         ),
@@ -376,7 +396,6 @@ class _ProfileDrawer extends StatelessWidget {
                 ),
                 const SizedBox(height: 30),
 
-                // Profile option
                 _DrawerOption(
                   icon: Icons.person_outline_rounded,
                   label: t(context, 'profile.title'),
@@ -385,12 +404,15 @@ class _ProfileDrawer extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // Dark/Light Mode Toggle
-                _ThemeToggleOption(isDark: isDark),
-
+                if (onAgentDashboard != null)
+                  _DrawerOption(
+                    icon: Icons.psychology_outlined,
+                    label: 'AI Agents',
+                    isDark: isDark,
+                    onTap: onAgentDashboard!,
+                  ),
                 const Spacer(),
 
-                // Logout option at bottom
                 _DrawerOption(
                   icon: Icons.logout_rounded,
                   label: 'Logout',
@@ -438,13 +460,13 @@ class _DrawerOption extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
             color: isDark
-                ? AppColors.backgroundDark.withAlpha(128) // ~0.5 opacity
-                : AppColors.salmonLight.withAlpha(77), // ~0.3 opacity
+                ? AppColors.backgroundDark.withAlpha(128)
+                : AppColors.salmonLight.withAlpha(77),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
                 color: (isDark ? Colors.black : AppColors.salmon)
-                    .withAlpha(26), // ~0.1 opacity
+                    .withAlpha(26),
                 blurRadius: 6,
                 offset: const Offset(0, 2),
               ),
@@ -464,70 +486,11 @@ class _DrawerOption extends StatelessWidget {
               const Spacer(),
               Icon(
                 Icons.chevron_right_rounded,
-                color: color.withAlpha(128), // ~0.5 opacity
+                color: color.withAlpha(128),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ThemeToggleOption extends StatelessWidget {
-  final bool isDark;
-
-  const _ThemeToggleOption({required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    final themeScope = AppThemeScope.of(context);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.backgroundDark.withAlpha(128) // ~0.5 opacity
-            : AppColors.mintLight.withAlpha(128),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: (isDark ? Colors.black : AppColors.mint)
-                .withAlpha(26), // ~0.1 opacity
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(
-            isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
-            color: isDark ? AppColors.textDarkMode : AppColors.textDark,
-            size: 24,
-          ),
-          const SizedBox(width: 16),
-          Text(
-            isDark ? 'Dark Mode' : 'Light Mode',
-            style: AppTextStyles.body.copyWith(
-              color: isDark ? AppColors.textDarkMode : AppColors.textDark,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const Spacer(),
-          Switch(
-            value: isDark,
-            onChanged: (value) {
-              themeScope.setDarkMode(value);
-              Navigator.pop(context); // Close drawer after toggle
-            },
-            activeThumbColor: AppColors.salmonDark,
-            activeTrackColor:
-                AppColors.salmonDark.withAlpha(102), // ~0.4 opacity
-            inactiveThumbColor: AppColors.salmon,
-            inactiveTrackColor: AppColors.salmon.withAlpha(77), // ~0.3 opacity
-          ),
-        ],
       ),
     );
   }

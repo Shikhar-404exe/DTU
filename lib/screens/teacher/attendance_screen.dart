@@ -1,4 +1,5 @@
-/// Attendance Management - Mark and view attendance by class and date
+
+library;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -22,10 +23,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   bool _loading = true;
   final Map<String, bool> _attendance = {};
 
-  // Attendance configuration
   DateTime? _attendanceStartDate;
   DateTime? _attendanceEndDate;
-  Set<int> _workingDays = {1, 2, 3, 4, 5}; // Monday to Friday by default
+  Set<int> _workingDays = {1, 2, 3, 4, 5};
 
   @override
   void initState() {
@@ -83,7 +83,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
   int _calculateWorkingDays() {
     if (_attendanceStartDate == null || _attendanceEndDate == null) {
-      return 30; // Default fallback
+      return 30;
     }
 
     int workingDays = 0;
@@ -131,7 +131,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
       final records = await TeacherDataService.getAttendance();
 
-      // Find attendance record for selected date and class
       final record = records.firstWhere(
         (r) => r.date == dateStr && r.classId == _selectedClass!.id,
         orElse: () => AttendanceRecord(
@@ -142,7 +141,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       );
 
       _attendance.clear();
-      // Get all students in this class by classId
+
       final classStudents =
           _students.where((s) => s.classId == _selectedClass!.id).toList();
       for (final student in classStudents) {
@@ -167,12 +166,11 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         attendance: _attendance,
       );
 
-      // Also update student attendance dates
       final students = await TeacherDataService.getStudents();
       for (final entry in _attendance.entries) {
         final studentIndex = students.indexWhere((s) => s.id == entry.key);
         if (studentIndex >= 0 && entry.value) {
-          // If marked present, add date to attendanceDates if not already there
+
           final student = students[studentIndex];
           if (!student.attendanceDates.contains(dateStr)) {
             students[studentIndex] = student.copyWith(
@@ -243,7 +241,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Start Date
                   InkWell(
                     onTap: () async {
                       final picked = await showDatePicker(
@@ -294,7 +291,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // End Date
                   InkWell(
                     onTap: () async {
                       final picked = await showDatePicker(
@@ -356,7 +352,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Working days checkboxes
                   ...[
                     (1, 'Monday'),
                     (2, 'Tuesday'),
@@ -422,7 +417,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               ElevatedButton(
                 onPressed: () {
                   _saveAttendanceConfig();
-                  setState(() {}); // Update main screen
+                  setState(() {});
                   Navigator.pop(context);
                 },
                 child: Text(t(context, 'save')),

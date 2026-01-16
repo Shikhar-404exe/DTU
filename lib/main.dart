@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' show cos, sin, pi;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -14,37 +15,44 @@ import 'screens/login_screen_new.dart';
 import 'screens/home_screen_wrapper.dart';
 import 'screens/teacher/teacher_dashboard_wrapper.dart';
 
-/// ---------------------------------------------------------------------------
-///  🎨 Global UI: Colors & Text (Light & Dark Mode)
-/// ---------------------------------------------------------------------------
-
 class AppColors {
-  // Light Mode Colors
-  static const Color primary = Color(0xFFFFB4A2); // pastel salmon
-  static const Color secondary = Color(0xFFB5E8CC); // pastel mint
-  static const Color background = Color(0xFFFFDAD0); // light salmon background
-  static const Color textDark = Color(0xFF2D2D2D);
-  static const Color textLight = Color(0xFF5C5C5C);
-  static const Color salmon = Color(0xFFFFB4A2); // pastel salmon
-  static const Color mint = Color(0xFFB5E8CC); // pastel mint
-  static const Color salmonLight = Color(0xFFFFE5DF); // lighter salmon
-  static const Color mintLight = Color(0xFFD8F5E3); // lighter mint
-  static const Color mauve = Color(0xFFE0B0D5); // pastel mauve
-  static const Color lavender = Color(0xFFD4B5FF); // pastel lavender
-  static const Color teal = Color(0xFF5F9EA0); // dark teal green pastel
-  static const Color cardLight = Color(0xFFFFFFFF); // white card for light mode
 
-  // Dark Mode Colors
-  static const Color backgroundDark = Color(0xFF1A1A2E); // deep navy dark
-  static const Color cardDark = Color(0xFF252542); // dark card
-  static const Color salmonDark = Color(0xFFE8998D); // muted salmon for dark
-  static const Color mintDark = Color(0xFF7EC8A3); // muted mint for dark
-  static const Color mauveDark = Color(0xFFC89EB8); // muted mauve for dark
-  static const Color lavenderDark =
-      Color(0xFFB89FD9); // muted lavender for dark
-  static const Color textDarkMode = Color(0xFFF5F5F5); // light text for dark
-  static const Color textLightDark =
-      Color(0xFFB0B0B0); // secondary text for dark
+  static const Color primary = Color(0xFFFFC8DD);
+  static const Color secondary = Color(0xFFBDE0FE);
+  static const Color background = Color(0xFFFFF5F8);
+  static const Color textDark = Color(0xFF4A4A4A);
+  static const Color textLight = Color(0xFF8E8E8E);
+  static const Color salmon = Color(0xFFFFAFCC);
+  static const Color mint = Color(0xFFC7F9CC);
+  static const Color salmonLight = Color(0xFFFFE5EF);
+  static const Color mintLight = Color(0xFFE8FCEA);
+  static const Color mauve = Color(0xFFCDB4DB);
+  static const Color lavender = Color(0xFFE2CFEA);
+  static const Color peach = Color(0xFFFFD6A5);
+  static const Color sky = Color(0xFFA2D2FF);
+  static const Color lilac = Color(0xFFD4C1EC);
+  static const Color teal = Color(0xFFB8E0D2);
+  static const Color skyLight = Color(0xFFE0F2FF);
+  static const Color cardLight = Color(0xFFFFFFFF);
+  static const Color cardSoft = Color(0xFFFFFBFE);
+
+  static const Color gradientStart = Color(0xFFFFF5F8);
+  static const Color gradientMid = Color(0xFFFFF9FC);
+  static const Color gradientEnd = Color(0xFFFFFDFE);
+
+  static const Color accentOrange = Color(0xFFFFB380);
+  static const Color accentGreen = Color(0xFF98D7C2);
+  static const Color accentBlue = Color(0xFF87C4FF);
+  static const Color accentPurple = Color(0xFFC3AED6);
+
+  static const Color cardDark = cardLight;
+  static const Color textDarkMode = textDark;
+  static const Color textLightDark = textLight;
+  static const Color salmonDark = salmon;
+  static const Color mintDark = mint;
+  static const Color backgroundDark = background;
+  static const Color lavenderDark = lavender;
+  static const Color mauveDark = mauve;
 }
 
 class AppTextStyles {
@@ -78,6 +86,11 @@ class AppTheme {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.primary,
       brightness: Brightness.light,
+    ).copyWith(
+      primary: AppColors.primary,
+      secondary: AppColors.secondary,
+      surface: AppColors.cardLight,
+      background: AppColors.background,
     );
 
     return ThemeData(
@@ -85,122 +98,71 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: Colors.transparent,
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.white.withAlpha(25), // ~0.10 opacity
+        backgroundColor: AppColors.cardLight.withAlpha(230),
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: AppTextStyles.wordmark,
+        titleTextStyle:
+            AppTextStyles.wordmark.copyWith(color: AppColors.textDark),
+        iconTheme: const IconThemeData(color: AppColors.textDark),
       ),
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(color: Colors.white54, width: 1.0),
+          borderRadius: BorderRadius.circular(20),
+          borderSide:
+              BorderSide(color: AppColors.primary.withAlpha(128), width: 1.0),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(color: Colors.white54, width: 1.0),
+          borderRadius: BorderRadius.circular(20),
+          borderSide:
+              BorderSide(color: AppColors.primary.withAlpha(128), width: 1.0),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
         filled: true,
-        fillColor: Colors.white.withAlpha(64), // ~0.25 opacity
-        hintStyle: AppTextStyles.hint.copyWith(color: Colors.white70),
+        fillColor: AppColors.cardLight.withAlpha(230),
+        hintStyle: AppTextStyles.hint.copyWith(color: AppColors.textLight),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.salmon,
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          elevation: 8,
+          elevation: 4,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(20),
           ),
           textStyle: GoogleFonts.poppins(
             fontSize: 17,
             fontWeight: FontWeight.w600,
           ),
-          shadowColor: AppColors.salmon.withAlpha(102), // ~0.4 opacity
+          shadowColor: AppColors.primary.withAlpha(77),
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: AppColors.cardLight,
+        elevation: 4,
+        shadowColor: AppColors.primary.withAlpha(51),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
         ),
       ),
       textTheme: TextTheme(
         headlineSmall: AppTextStyles.headline,
         bodyMedium: AppTextStyles.body,
       ),
-    );
-  }
-
-  static ThemeData darkTheme() {
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: AppColors.salmonDark,
-      brightness: Brightness.dark,
-    );
-
-    return ThemeData(
-      useMaterial3: true,
-      colorScheme: colorScheme,
-      scaffoldBackgroundColor: Colors.transparent,
-      appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.cardDark.withAlpha(217), // ~0.85 opacity
-        elevation: 0,
-        centerTitle: true,
-        titleTextStyle:
-            AppTextStyles.wordmark.copyWith(color: AppColors.textDarkMode),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: BorderSide(
-              color: AppColors.textLightDark.withAlpha(77),
-              width: 1.0), // ~0.3 opacity
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: BorderSide(
-              color: AppColors.textLightDark.withAlpha(77),
-              width: 1.0), // ~0.3 opacity
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(color: AppColors.salmonDark, width: 2),
-        ),
-        filled: true,
-        fillColor: AppColors.cardDark.withAlpha(153), // ~0.6 opacity
-        hintStyle: AppTextStyles.hint.copyWith(color: AppColors.textLightDark),
-        labelStyle: const TextStyle(color: AppColors.textLightDark),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.salmonDark,
-          foregroundColor: Colors.white,
-          elevation: 8,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
-          textStyle: GoogleFonts.poppins(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-          ),
-          shadowColor: AppColors.salmonDark.withAlpha(102), // ~0.4 opacity
-        ),
-      ),
-      textTheme: TextTheme(
-        headlineSmall:
-            AppTextStyles.headline.copyWith(color: AppColors.textDarkMode),
-        bodyMedium: AppTextStyles.body.copyWith(color: AppColors.textDarkMode),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: AppColors.cardLight,
+        selectedItemColor: AppColors.salmon,
+        unselectedItemColor: AppColors.textLight,
+        elevation: 8,
       ),
     );
   }
 }
-
-/// ---------------------------------------------------------------------------
-///  🌈 Gradient + Rotating Ashoka Chakra Background (Supports Dark/Light)
-/// ---------------------------------------------------------------------------
 
 class GradientBackground extends StatelessWidget {
   final Widget child;
@@ -208,14 +170,26 @@ class GradientBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? AppColors.backgroundDark : const Color(0xFFFFDAD0);
-
     return Container(
-      color: bgColor,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFFFE8E8),
+            Color(0xFFFFF5F5),
+            Color(0xFFFFF0F0),
+            Color(0xFFFFEBEB),
+          ],
+          stops: [0.0, 0.3, 0.7, 1.0],
+        ),
+      ),
       child: Stack(
         children: [
-          _RotatingAshokaChakra(isDark: isDark), // big, soft watermark
+
+          const _EnhancedVectorDecorations(),
+          const _GeometricPatterns(),
+          const _RotatingAshokaChakra(),
           child,
         ],
       ),
@@ -223,9 +197,367 @@ class GradientBackground extends StatelessWidget {
   }
 }
 
+class _EnhancedVectorDecorations extends StatelessWidget {
+  const _EnhancedVectorDecorations();
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+
+    return IgnorePointer(
+      child: Stack(
+        children: [
+
+          Positioned(
+            top: -size.width * 0.2,
+            right: -size.width * 0.15,
+            child: Container(
+              width: size.width * 0.6,
+              height: size.width * 0.6,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.teal.withOpacity(0.25),
+                    AppColors.teal.withOpacity(0.12),
+                    AppColors.teal.withOpacity(0.05),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.4, 0.7, 1.0],
+                ),
+              ),
+            ),
+          ),
+
+          Positioned(
+            bottom: size.height * 0.05,
+            left: -size.width * 0.2,
+            child: Container(
+              width: size.width * 0.65,
+              height: size.width * 0.65,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.mauve.withOpacity(0.2),
+                    AppColors.mauve.withOpacity(0.1),
+                    AppColors.lavender.withOpacity(0.05),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.4, 0.7, 1.0],
+                ),
+              ),
+            ),
+          ),
+
+          Positioned(
+            top: size.height * 0.35,
+            right: -size.width * 0.15,
+            child: Container(
+              width: size.width * 0.45,
+              height: size.width * 0.45,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(150),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.teal.withOpacity(0.18),
+                    AppColors.mint.withOpacity(0.08),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          Positioned(
+            top: size.height * 0.12,
+            left: size.width * 0.08,
+            child: Container(
+              width: size.width * 0.22,
+              height: size.width * 0.22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.mauve.withOpacity(0.18),
+                    AppColors.lavender.withOpacity(0.08),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          Positioned(
+            bottom: size.height * 0.2,
+            right: size.width * 0.02,
+            child: Container(
+              width: size.width * 0.28,
+              height: size.width * 0.28,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.teal.withOpacity(0.15),
+                    AppColors.sky.withOpacity(0.08),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          Positioned(
+            top: size.height * 0.55,
+            left: size.width * 0.02,
+            child: Container(
+              width: size.width * 0.15,
+              height: size.width * 0.15,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.mauve.withOpacity(0.12),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GeometricPatterns extends StatelessWidget {
+  const _GeometricPatterns();
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+
+    return IgnorePointer(
+      child: Stack(
+        children: [
+
+          Positioned(
+            top: size.height * 0.08,
+            left: size.width * 0.35,
+            child: Transform.rotate(
+              angle: 0.785,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: AppColors.teal.withOpacity(0.15),
+                    width: 2,
+                  ),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ),
+
+          Positioned(
+            top: size.height * 0.45,
+            right: size.width * 0.12,
+            child: CustomPaint(
+              size: const Size(30, 30),
+              painter: _TrianglePainter(
+                color: AppColors.mauve.withOpacity(0.15),
+              ),
+            ),
+          ),
+
+          Positioned(
+            top: size.height * 0.65,
+            left: size.width * 0.18,
+            child: Container(
+              width: 35,
+              height: 35,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.teal.withOpacity(0.12),
+                  width: 2,
+                ),
+              ),
+            ),
+          ),
+
+          Positioned(
+            top: size.height * 0.18,
+            right: size.width * 0.15,
+            child: _DotsPattern(
+              color: AppColors.mauve.withOpacity(0.1),
+            ),
+          ),
+
+          Positioned(
+            bottom: size.height * 0.15,
+            left: size.width * 0.1,
+            child: _DotsPattern(
+              color: AppColors.teal.withOpacity(0.08),
+              rows: 3,
+              cols: 4,
+            ),
+          ),
+
+          Positioned(
+            top: size.height * 0.75,
+            right: size.width * 0.25,
+            child: CustomPaint(
+              size: const Size(60, 20),
+              painter: _WaveLinePainter(
+                color: AppColors.mauve.withOpacity(0.12),
+              ),
+            ),
+          ),
+
+          Positioned(
+            bottom: size.height * 0.35,
+            right: size.width * 0.08,
+            child: CustomPaint(
+              size: const Size(25, 25),
+              painter: _HexagonPainter(
+                color: AppColors.teal.withOpacity(0.1),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DotsPattern extends StatelessWidget {
+  final Color color;
+  final int rows;
+  final int cols;
+
+  const _DotsPattern({
+    required this.color,
+    this.rows = 3,
+    this.cols = 3,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: List.generate(
+          rows,
+          (i) => Row(
+                children: List.generate(
+                    cols,
+                    (j) => Container(
+                          width: 4,
+                          height: 4,
+                          margin: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: color,
+                          ),
+                        )),
+              )),
+    );
+  }
+}
+
+class _TrianglePainter extends CustomPainter {
+  final Color color;
+  _TrianglePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    final path = Path()
+      ..moveTo(size.width / 2, 0)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _WaveLinePainter extends CustomPainter {
+  final Color color;
+  _WaveLinePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+
+    final path = Path();
+    path.moveTo(0, size.height / 2);
+
+    for (double x = 0; x <= size.width; x += 10) {
+      path.quadraticBezierTo(
+        x + 2.5,
+        x % 20 == 0 ? 0 : size.height,
+        x + 5,
+        size.height / 2,
+      );
+    }
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _HexagonPainter extends CustomPainter {
+  final Color color;
+  _HexagonPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    final path = Path();
+    final centerX = size.width / 2;
+    final centerY = size.height / 2;
+    final radius = size.width / 2;
+
+    for (int i = 0; i < 6; i++) {
+      final angle = (i * 60 - 30) * pi / 180;
+      final x = centerX + radius * cos(angle);
+      final y = centerY + radius * sin(angle);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class _RotatingAshokaChakra extends StatefulWidget {
-  final bool isDark;
-  const _RotatingAshokaChakra({this.isDark = false});
+  const _RotatingAshokaChakra();
 
   @override
   State<_RotatingAshokaChakra> createState() => _RotatingAshokaChakraState();
@@ -238,7 +570,6 @@ class _RotatingAshokaChakraState extends State<_RotatingAshokaChakra>
   @override
   void initState() {
     super.initState();
-    // Slow, smooth rotation ~40s per full turn
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 40),
@@ -258,63 +589,27 @@ class _RotatingAshokaChakraState extends State<_RotatingAshokaChakra>
       return const SizedBox.shrink();
     }
 
-    // Get screen size to make chakra cover 1/4 of screen (top-left quadrant)
     final screenSize = MediaQuery.sizeOf(context);
-    final chakraSize =
-        screenSize.width * 0.9; // Big enough to cover quarter of screen
+    final chakraSize = screenSize.width * 0.9;
 
-    // Position so center is at top-left corner, chakra appears ABOVE app bar
     return IgnorePointer(
       child: Align(
         alignment: Alignment.topLeft,
         child: Transform.translate(
-          offset: Offset(-chakraSize * 0.35,
-              -chakraSize * 0.35), // Show about 1/4 of chakra
+          offset: Offset(-chakraSize * 0.35, -chakraSize * 0.35),
           child: Opacity(
-            opacity: widget.isDark ? 0.25 : 0.22,
+            opacity: 0.15,
             child: SizedBox(
               width: chakraSize,
               height: chakraSize,
               child: RotationTransition(
                 turns: _controller!,
-                // Only apply color filter in dark mode to invert, light mode uses original image
-                child: widget.isDark
-                    ? ColorFiltered(
-                        colorFilter: const ColorFilter.matrix(<double>[
-                          -1,
-                          0,
-                          0,
-                          0,
-                          255,
-                          0,
-                          -1,
-                          0,
-                          0,
-                          255,
-                          0,
-                          0,
-                          -1,
-                          0,
-                          255,
-                          0,
-                          0,
-                          0,
-                          1,
-                          0,
-                        ]),
-                        child: Image.asset(
-                          'assets/ashoka_chakra.png',
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const SizedBox.shrink(),
-                        ),
-                      )
-                    : Image.asset(
-                        'assets/ashoka_chakra.png',
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const SizedBox.shrink(),
-                      ),
+                child: Image.asset(
+                  'assets/ashoka_chakra.png',
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const SizedBox.shrink(),
+                ),
               ),
             ),
           ),
@@ -323,10 +618,6 @@ class _RotatingAshokaChakraState extends State<_RotatingAshokaChakra>
     );
   }
 }
-
-/// ---------------------------------------------------------------------------
-///  🌐 Simple Offline Localization (EN / HI / PA)
-/// ---------------------------------------------------------------------------
 
 class AppLanguageScope extends InheritedWidget {
   final String langCode;
@@ -356,10 +647,6 @@ class AppLanguageScope extends InheritedWidget {
   }
 }
 
-/// ---------------------------------------------------------------------------
-///  🌙 Theme Mode Scope (Dark / Light)
-/// ---------------------------------------------------------------------------
-
 class AppThemeScope extends InheritedWidget {
   final bool isDarkMode;
   final void Function(bool) setDarkMode;
@@ -383,7 +670,7 @@ class AppThemeScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(covariant AppThemeScope oldWidget) {
-    return oldWidget.isDarkMode != isDarkMode;
+    return false;
   }
 }
 
@@ -417,7 +704,7 @@ class AppLocalizations {
       'profile.language': 'App Language',
       'profile.save': 'Save details',
       'profile.changePhoto': 'Change photo',
-      // Teacher Dashboard
+
       'teacher_dashboard': 'Teacher Dashboard',
       'students': 'Students',
       'classes': 'Classes',
@@ -483,7 +770,7 @@ class AppLocalizations {
       'profile.language': 'ऐप भाषा',
       'profile.save': 'विवरण सेव करें',
       'profile.changePhoto': 'फोटो बदलें',
-      // Teacher Dashboard
+
       'teacher_dashboard': 'शिक्षक डैशबोर्ड',
       'students': 'छात्र',
       'classes': 'कक्षाएं',
@@ -549,7 +836,7 @@ class AppLocalizations {
       'profile.language': 'ਐਪ ਭਾਸ਼ਾ',
       'profile.save': 'ਵੇਰਵੇ ਸੇਵ ਕਰੋ',
       'profile.changePhoto': 'ਫੋਟੋ ਬਦਲੋ',
-      // Teacher Dashboard
+
       'teacher_dashboard': 'ਅਧਿਆਪਕ ਡੈਸ਼ਬੋਰਡ',
       'students': 'ਵਿਦਿਆਰਥੀ',
       'classes': 'ਕਲਾਸਾਂ',
@@ -595,22 +882,13 @@ class AppLocalizations {
   }
 }
 
-// helper
 String t(BuildContext context, String key) {
   final scope = AppLanguageScope.of(context);
   return AppLocalizations.translate(scope.langCode, key);
 }
 
-/// ---------------------------------------------------------------------------
-///  🔌 Backend Config (same names as before)
-/// ---------------------------------------------------------------------------
-
 String backendUrl = dotenv.env['BACKEND_URL'] ?? "http://172.17.4.116:8000";
 String notesApiUrl = dotenv.env['NOTES_API_URL'] ?? "$backendUrl/generate-note";
-
-/// ---------------------------------------------------------------------------
-///  🔍 Backend Connection Helper
-/// ---------------------------------------------------------------------------
 
 Future<void> _checkBackendConnection() async {
   try {
@@ -642,30 +920,23 @@ Future<void> _checkBackendConnection() async {
   }
 }
 
-/// ---------------------------------------------------------------------------
-///  🏁 main()
-/// ---------------------------------------------------------------------------
-
 Future<void> main() async {
-  // Wrap everything in try-catch to prevent crashes
+
   runZonedGuarded(() async {
     try {
       WidgetsFlutterBinding.ensureInitialized();
 
-      // Setup global error handlers
       FlutterError.onError = (FlutterErrorDetails details) {
         debugPrint('Flutter Error: ${details.exception}');
         debugPrint('Stack trace: ${details.stack}');
       };
 
-      // Catch errors outside Flutter framework
       PlatformDispatcher.instance.onError = (error, stack) {
         debugPrint('Platform Error: $error');
         debugPrint('Stack trace: $stack');
         return true;
       };
 
-      // Initialize Firebase and all core services (MUST wait for Firebase)
       final initResult = await AppInitializer.initialize();
 
       if (!initResult.isSuccess) {
@@ -674,14 +945,12 @@ Future<void> main() async {
         debugPrint('✅ App initialized successfully');
       }
 
-      // Load environment variables (optional)
       try {
         await dotenv.load(fileName: ".env");
       } catch (e) {
         debugPrint('Environment file not loaded: $e');
       }
 
-      // Optional: try ping backend with better error handling (non-blocking)
       _checkBackendConnection();
 
       runApp(const MyApp());
@@ -689,7 +958,6 @@ Future<void> main() async {
       debugPrint('Fatal error in main: $e');
       debugPrint('Stack trace: $stackTrace');
 
-      // Run app with minimal functionality in case of critical error
       runApp(
         MaterialApp(
           debugShowCheckedModeBanner: false,
@@ -718,7 +986,7 @@ Future<void> main() async {
                     const SizedBox(height: 24),
                     ElevatedButton(
                       onPressed: () {
-                        // Attempt to restart
+
                         main();
                       },
                       child: const Text('Retry'),
@@ -737,10 +1005,6 @@ Future<void> main() async {
   });
 }
 
-/// ---------------------------------------------------------------------------
-///  🌱 Root with language and theme handling
-/// ---------------------------------------------------------------------------
-
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
   @override
@@ -750,7 +1014,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   String _langCode = 'en';
   bool _loadedLang = false;
-  bool _isDarkMode = false;
+  final bool _isDarkMode = false;
 
   @override
   void initState() {
@@ -762,19 +1026,16 @@ class _MyAppState extends State<MyApp> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final code = prefs.getString('language_code') ?? 'en';
-      final darkMode = prefs.getBool('dark_mode') ?? false;
+
       if (!mounted) return;
       setState(() {
         _langCode = code;
-        _isDarkMode = darkMode;
         _loadedLang = true;
       });
     } catch (e) {
-      // Fallback to defaults if preferences fail to load
       if (!mounted) return;
       setState(() {
         _langCode = 'en';
-        _isDarkMode = false;
         _loadedLang = true;
       });
     }
@@ -788,22 +1049,12 @@ class _MyAppState extends State<MyApp> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('language_code', code);
     } catch (e) {
-      // Silently fail - UI already updated
       debugPrint('Failed to save language preference: $e');
     }
   }
 
-  Future<void> _setDarkMode(bool value) async {
-    setState(() {
-      _isDarkMode = value;
-    });
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('dark_mode', value);
-    } catch (e) {
-      // Silently fail - UI already updated
-      debugPrint('Failed to save dark mode preference: $e');
-    }
+  void _setDarkMode(bool value) {
+
   }
 
   @override
@@ -827,18 +1078,13 @@ class _MyAppState extends State<MyApp> {
           title: 'Vidyarthi',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme(),
-          darkTheme: AppTheme.darkTheme(),
-          themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          themeMode: ThemeMode.light,
           home: const SplashOrHome(),
         ),
       ),
     );
   }
 }
-
-/// ---------------------------------------------------------------------------
-///  🚦 SplashOrHome
-/// ---------------------------------------------------------------------------
 
 class SplashOrHome extends StatefulWidget {
   const SplashOrHome({super.key});
@@ -850,7 +1096,7 @@ class SplashOrHome extends StatefulWidget {
 class _SplashOrHomeState extends State<SplashOrHome> {
   bool _loading = true;
   bool _isAuthenticated = false;
-  String _userRole = 'student'; // 'student' or 'teacher'
+  String _userRole = 'student';
 
   @override
   void initState() {
@@ -860,12 +1106,11 @@ class _SplashOrHomeState extends State<SplashOrHome> {
 
   Future<void> _checkAuthState() async {
     try {
-      // Give initialization a moment
+
       await Future.delayed(const Duration(milliseconds: 300));
 
       if (!mounted) return;
 
-      // Try to get auth service (may fail if Firebase not initialized)
       try {
         final authService = FirebaseAuthService.instance;
         final isAuthenticated =
@@ -884,7 +1129,6 @@ class _SplashOrHomeState extends State<SplashOrHome> {
         debugPrint('Firebase auth service not available: $e');
       }
 
-      // Fallback: check SharedPreferences for guest or token
       try {
         final prefs = await SharedPreferences.getInstance();
         final token = prefs.getString('token');
@@ -899,7 +1143,7 @@ class _SplashOrHomeState extends State<SplashOrHome> {
         });
       } catch (e) {
         debugPrint('SharedPreferences error: $e');
-        // Default to login screen
+
         if (!mounted) return;
         setState(() {
           _isAuthenticated = false;
@@ -909,7 +1153,7 @@ class _SplashOrHomeState extends State<SplashOrHome> {
     } catch (e, stackTrace) {
       debugPrint('Critical auth check error: $e');
       debugPrint('Stack trace: $stackTrace');
-      // On error, show login screen
+
       if (!mounted) return;
       setState(() {
         _isAuthenticated = false;
@@ -927,7 +1171,7 @@ class _SplashOrHomeState extends State<SplashOrHome> {
     }
 
     if (_isAuthenticated) {
-      // Route to teacher or student dashboard based on role
+
       if (_userRole == 'teacher') {
         return const GradientBackground(child: TeacherDashboardWrapper());
       } else {

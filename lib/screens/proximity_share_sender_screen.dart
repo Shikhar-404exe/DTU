@@ -1,5 +1,5 @@
-/// Proximity Share Sender Screen (Teacher Mode)
-/// Teacher broadcasts notes to entire class via Bluetooth/WiFi
+
+
 library;
 
 import 'package:flutter/material.dart';
@@ -155,19 +155,16 @@ class _ProximityShareSenderScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Note preview
+
           _buildNotePreview(),
           const SizedBox(height: 20),
 
-          // Status card
           _buildStatusCard(),
           const SizedBox(height: 20),
 
-          // Connection info (WiFi SSID/Password)
           if (_state == ProximityShareState.broadcasting)
             _buildConnectionInfo(),
 
-          // Connected devices list
           if (_connectedDevices.isNotEmpty) ...[
             const SizedBox(height: 20),
             _buildDevicesList(),
@@ -175,10 +172,8 @@ class _ProximityShareSenderScreenState
 
           const SizedBox(height: 20),
 
-          // Action buttons
           _buildActionButtons(),
 
-          // Statistics
           const SizedBox(height: 20),
           _buildStatistics(),
         ],

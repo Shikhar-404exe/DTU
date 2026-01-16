@@ -112,7 +112,6 @@ class _SavedNotesOrganizedScreenState extends State<SavedNotesOrganizedScreen> {
     final title = note.title;
     final type = note.type;
 
-    // Show loading
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -124,10 +123,9 @@ class _SavedNotesOrganizedScreenState extends State<SavedNotesOrganizedScreen> {
     try {
       QRPayload payload;
 
-      // Check if note has a file path (both text and PDF notes are saved as files)
       final filePath = note.filePath;
       if (filePath != null && filePath.isNotEmpty) {
-        // Use file-based sharing for both text and PDF notes
+
         payload = await QRShareHelper.prepareForSharing(
           title: title,
           content: '',
@@ -138,7 +136,7 @@ class _SavedNotesOrganizedScreenState extends State<SavedNotesOrganizedScreen> {
           categoryId: note.categoryId,
         );
       } else {
-        // Fallback to content-based sharing (for old notes without file path)
+
         payload = await QRShareHelper.prepareForSharing(
           title: title,
           content: note.content,
@@ -149,9 +147,8 @@ class _SavedNotesOrganizedScreenState extends State<SavedNotesOrganizedScreen> {
       }
 
       if (!mounted) return;
-      Navigator.pop(context); // Close loading
+      Navigator.pop(context);
 
-      // Navigate to QR share screen
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -163,7 +160,7 @@ class _SavedNotesOrganizedScreenState extends State<SavedNotesOrganizedScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      Navigator.pop(context); // Close loading
+      Navigator.pop(context);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -348,7 +345,7 @@ class _SavedNotesOrganizedScreenState extends State<SavedNotesOrganizedScreen> {
   }
 
   void _openNote(OrganizedNote note) {
-    // Determine actual file type from extension if filePath exists
+
     bool isPdfFile = false;
     bool isTextFile = false;
 
@@ -358,11 +355,10 @@ class _SavedNotesOrganizedScreenState extends State<SavedNotesOrganizedScreen> {
       isTextFile = extension == 'txt' || extension == 'md';
     }
 
-    // Use file extension over note.type for accuracy
     if ((isPdfFile || note.type == 'pdf') &&
         note.filePath != null &&
         !isTextFile) {
-      // Open PDF viewer
+
       final path = note.filePath!;
       Navigator.push(
         context,
@@ -403,7 +399,7 @@ class _SavedNotesOrganizedScreenState extends State<SavedNotesOrganizedScreen> {
     } else if ((isTextFile || note.type == 'text') &&
         note.filePath != null &&
         note.filePath!.isNotEmpty) {
-      // Text note stored in file - open with proper background
+
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -415,7 +411,7 @@ class _SavedNotesOrganizedScreenState extends State<SavedNotesOrganizedScreen> {
         ),
       );
     } else if (note.filePath != null && note.filePath!.isNotEmpty) {
-      // Other file types - try to open as text
+
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -427,7 +423,7 @@ class _SavedNotesOrganizedScreenState extends State<SavedNotesOrganizedScreen> {
         ),
       );
     } else {
-      // Text note with content directly
+
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -495,7 +491,7 @@ class _SavedNotesOrganizedScreenState extends State<SavedNotesOrganizedScreen> {
     );
 
     if (confirmed == true) {
-      // Delete file if it exists
+
       if (note.filePath != null) {
         try {
           final file = File(note.filePath!);

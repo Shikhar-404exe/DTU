@@ -1,14 +1,14 @@
-/// AI Chatbot Screen with Voice Interface
-/// Main conversational UI with TTS/STT integration
+
+
+library;
 
 import 'package:flutter/material.dart';
 import '../services/chatbot_service.dart';
 import '../services/voice_service.dart';
-import '../services/youtube_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AIChatbotScreen extends StatefulWidget {
-  const AIChatbotScreen({Key? key}) : super(key: key);
+  const AIChatbotScreen({super.key});
 
   @override
   State<AIChatbotScreen> createState() => _AIChatbotScreenState();
@@ -49,12 +49,16 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
         _sessionId = sessionId;
       });
 
-      // Load history
       final history = await ChatbotService.getHistory(sessionId: sessionId);
       setState(() {
         _messages.addAll(history);
       });
       _scrollToBottom();
+    } else {
+
+      setState(() {
+        _sessionId = 'local_${DateTime.now().millisecondsSinceEpoch}';
+      });
     }
   }
 
@@ -73,7 +77,6 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
     _messageController.clear();
     _scrollToBottom();
 
-    // Send to backend
     final response = await ChatbotService.sendMessage(
       sessionId: _sessionId!,
       message: text,
@@ -97,7 +100,6 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
       });
       _scrollToBottom();
 
-      // Auto-speak response
       if (mounted) {
         _speakMessage(response['response']);
       }
@@ -132,7 +134,7 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
     });
 
     final result = await VoiceService.listen(
-      language: '${_selectedLanguage}-IN',
+      language: '$_selectedLanguage-IN',
       timeout: const Duration(seconds: 10),
       onResult: (text) {
         if (mounted && text.isNotEmpty) {
@@ -181,7 +183,7 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
       appBar: AppBar(
         title: const Text('AI Assistant'),
         actions: [
-          // Language selector
+
           PopupMenuButton<String>(
             icon: const Icon(Icons.language),
             onSelected: (lang) {
@@ -197,7 +199,7 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
               const PopupMenuItem(value: 'te', child: Text('తెలుగు')),
             ],
           ),
-          // Mode selector
+
           PopupMenuButton<ChatMode>(
             icon: Icon(_currentMode == ChatMode.offline
                 ? Icons.cloud_off
@@ -246,7 +248,7 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
       ),
       body: Column(
         children: [
-          // Messages list
+
           Expanded(
             child: _messages.isEmpty
                 ? Center(
@@ -279,7 +281,6 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
                   ),
           ),
 
-          // Loading indicator
           if (_isLoading)
             const Padding(
               padding: EdgeInsets.all(8.0),
@@ -297,7 +298,6 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
               ),
             ),
 
-          // Input area
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -312,7 +312,7 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
             ),
             child: Row(
               children: [
-                // Voice input button
+
                 IconButton(
                   icon: Icon(
                     _isListening ? Icons.mic : Icons.mic_none,
@@ -321,7 +321,6 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
                   onPressed: _isListening ? null : _startListening,
                 ),
 
-                // Text input
                 Expanded(
                   child: TextField(
                     controller: _messageController,
@@ -335,14 +334,12 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
                   ),
                 ),
 
-                // Stop speaking button (when speaking)
                 if (_isSpeaking)
                   IconButton(
                     icon: const Icon(Icons.stop, color: Colors.red),
                     onPressed: _stopSpeaking,
                   ),
 
-                // Send button
                 IconButton(
                   icon: const Icon(Icons.send),
                   onPressed: () => _sendMessage(_messageController.text),
@@ -367,7 +364,7 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
         decoration: BoxDecoration(
-          color: isUser ? Theme.of(context).primaryColor : Colors.grey[200],
+          color: isUser ? const Color(0xFFFFC8DD) : const Color(0xFFBDE0FE),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -375,8 +372,8 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
           children: [
             Text(
               message.content,
-              style: TextStyle(
-                color: isUser ? Colors.white : Colors.black87,
+              style: const TextStyle(
+                color: Color(0xFF2D3142),
                 fontSize: 16,
               ),
             ),
@@ -386,7 +383,7 @@ class _AIChatbotScreenState extends State<AIChatbotScreen> {
                 child: Text(
                   'via ${message.agentId}',
                   style: TextStyle(
-                    color: isUser ? Colors.white70 : Colors.black54,
+                    color: const Color(0xFF2D3142).withOpacity(0.6),
                     fontSize: 11,
                   ),
                 ),

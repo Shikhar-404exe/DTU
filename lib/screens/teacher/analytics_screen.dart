@@ -1,5 +1,6 @@
-// filepath: lib/screens/teacher/analytics_screen.dart
-/// Analytics - View attendance and performance statistics
+
+
+library;
 
 import 'package:flutter/material.dart';
 import '../../main.dart';
@@ -66,7 +67,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       return;
     }
 
-    // Average Attendance - calculate from attendanceDates (assuming 30 days total)
     const totalDays = 30;
     final totalAttendance = classStudents.fold<double>(
       0.0,
@@ -79,7 +79,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
     _averageAttendance = totalAttendance / classStudents.length;
 
-    // Marks Distribution (A: 90+, B: 75-89, C: 60-74, D: <60)
     _marksDistribution = {
       'A (90+)': 0,
       'B (75-89)': 0,
@@ -145,7 +144,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Class Selector
+
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
@@ -179,7 +178,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Average Attendance Card
                       _MetricCard(
                         title: t(context, 'average_attendance'),
                         value: '${_averageAttendance.toStringAsFixed(1)}%',
@@ -189,7 +187,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Marks Distribution
                       Text(
                         t(context, 'marks_distribution'),
                         style: TextStyle(
@@ -222,7 +219,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
                       const SizedBox(height: 32),
 
-                      // Student Analytics Section
                       Text(
                         t(context, 'student_analytics'),
                         style: TextStyle(
@@ -235,7 +231,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Student Cards
                       ..._getClassStudents().map((student) {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 16),
@@ -287,7 +282,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -331,7 +326,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Attendance Pie Chart
                 Text(
                   t(context, 'attendance_overview'),
                   style: TextStyle(
@@ -374,7 +368,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Subject-wise Marks
                 if (student.marks.isNotEmpty) ...[
                   Text(
                     t(context, 'subject_wise_performance'),
@@ -415,7 +408,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Subject Details
                   ...student.marks.entries.map((entry) {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8),
@@ -642,7 +634,7 @@ class _StudentAnalyticsCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Student Info
+
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -710,7 +702,6 @@ class _StudentAnalyticsCard extends StatelessWidget {
               ),
             ),
 
-            // View Details Icon
             Icon(
               Icons.arrow_forward_ios,
               size: 20,

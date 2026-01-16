@@ -33,15 +33,12 @@ class StorageService {
     }
   }
 
-  // Notes
   static Future<List<Map<String, dynamic>>> loadNotes() => _readList(_notesKey);
   static Future<bool> saveNotes(List<Map<String, dynamic>> notes) => _writeList(_notesKey, notes);
 
-  // Timetable
   static Future<List<Map<String, dynamic>>> loadTimetable() => _readList(_timetableKey);
   static Future<bool> saveTimetable(List<Map<String, dynamic>> entries) => _writeList(_timetableKey, entries);
 
-  // Auth state helpers
   static Future<void> clearAuth() async {
     try {
       final p = await SharedPreferences.getInstance();

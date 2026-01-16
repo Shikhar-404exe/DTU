@@ -1,9 +1,11 @@
-/// Chatbot Service
-/// Handles all chatbot API interactions
+
+
+library;
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'api_config.dart';
+import '../core/constants/app_constants.dart';
 
 enum ChatMode {
   offline,
@@ -123,12 +125,167 @@ class ChatbotService {
     }
   }
 
+  static final Map<String, String> _localGuidance = {
+    'help': '''I can help you navigate the app! Here are the main features:
+• **Home**: Your dashboard with all features
+• **Doubts**: Record voice notes and share doubts with peers
+• **AI Chat**: Chat with AI assistant (that's me!)
+• **Profile**: Manage your settings
+
+What would you like to know more about?''',
+    'doubts': '''The **Doubts** section helps you:
+• Record voice notes with your questions
+• Add text doubts organized by subject
+• Share doubts via QR code or P2P
+• Mark doubts as resolved when answered
+
+Tap the microphone button to start recording!''',
+    'scanner': '''The **PDF Scanner** lets you:
+• Scan handwritten notes or documents
+• Apply filters (Enhance, High Contrast, Lighten)
+• Save scans as PDF files
+• Share your scanned documents
+
+Just point your camera at the document and tap capture!''',
+    'photomath': '''**Photomath** feature helps with:
+• Capturing math problems with your camera
+• Getting step-by-step solutions
+• AI-powered problem solving when OCR fails
+
+Just photograph any math equation and get solutions!''',
+    'videos': '''The **Videos** section provides:
+• Educational content from YouTube
+• Subject-wise video organization
+• Search for specific topics
+
+Browse educational videos to enhance learning!''',
+    'notes': '''The **Notes** feature allows you:
+• Create and organize study notes
+• AI-generated summaries
+• Subject-wise categorization
+
+Keep all your study material in one place!''',
+    'offline': '''When **offline**, you can still:
+• View previously loaded content
+• Record voice doubts
+• Use the scanner
+• Access cached videos
+
+I'll guide you through the app even without internet!''',
+    'default': '''Hi! I'm your Vidyarthi AI assistant. I can help you:
+• Navigate the app features
+• Answer questions about subjects
+• Provide study guidance
+
+Try asking about: doubts, scanner, photomath, videos, or notes!'''
+  };
+
+  static String _getLocalResponse(String message) {
+    final lowerMessage = message.toLowerCase();
+
+    if (lowerMessage.contains('help') || lowerMessage.contains('what can')) {
+      return _localGuidance['help']!;
+    } else if (lowerMessage.contains('doubt') ||
+        lowerMessage.contains('voice') ||
+        lowerMessage.contains('record')) {
+      return _localGuidance['doubts']!;
+    } else if (lowerMessage.contains('scan') ||
+        lowerMessage.contains('pdf') ||
+        lowerMessage.contains('document')) {
+      return _localGuidance['scanner']!;
+    } else if (lowerMessage.contains('math') ||
+        lowerMessage.contains('photomath') ||
+        lowerMessage.contains('equation')) {
+      return _localGuidance['photomath']!;
+    } else if (lowerMessage.contains('video') ||
+        lowerMessage.contains('youtube') ||
+        lowerMessage.contains('watch')) {
+      return _localGuidance['videos']!;
+    } else if (lowerMessage.contains('note') ||
+        lowerMessage.contains('summary') ||
+        lowerMessage.contains('study')) {
+      return _localGuidance['notes']!;
+    } else if (lowerMessage.contains('offline') ||
+        lowerMessage.contains('internet') ||
+        lowerMessage.contains('connection')) {
+      return _localGuidance['offline']!;
+    } else if (lowerMessage.contains('hello') ||
+        lowerMessage.contains('hi') ||
+        lowerMessage.contains('hey')) {
+      return _localGuidance['default']!;
+    }
+
+    return _localGuidance['default']!;
+  }
+
+  static Future<Map<String, dynamic>?> _callOpenRouter(String message) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('${AppConstants.openRouterBaseUrl}/chat/completions'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ${AppConstants.openRouterApiKey}',
+              'HTTP-Referer': 'https://vidyarthi.app',
+              'X-Title': 'Vidyarthi AI Assistant',
+            },
+            body: jsonEncode({
+              'model': AppConstants.openRouterModel,
+              'messages': [
+                {
+                  'role': 'system',
+                  'content':
+                      '''You are Vidyarthi AI Assistant, a helpful educational chatbot for rural students in India.
+You help students with:
+- Understanding app features (Doubts section, PDF Scanner, Photomath, Videos, Notes)
+- Answering academic questions across subjects
+- Providing study tips and guidance
+- Explaining concepts in simple terms
+
+Be friendly, supportive, and explain things clearly. Use simple language suitable for students.
+Keep responses concise but helpful.'''
+                },
+                {'role': 'user', 'content': message}
+              ],
+              'max_tokens': 500,
+              'temperature': 0.7,
+            }),
+          )
+          .timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final content = data['choices'][0]['message']['content'];
+        return {
+          'success': true,
+          'response': content,
+          'agent_id': 'openrouter',
+          'mode': 'online',
+        };
+      }
+      return null;
+    } catch (e) {
+      print('OpenRouter error: $e');
+      return null;
+    }
+  }
+
   static Future<Map<String, dynamic>?> sendMessage({
     required String sessionId,
     required String message,
     Map<String, dynamic>? context,
     ChatMode? mode,
   }) async {
+
+    if (mode == ChatMode.offline) {
+      return {
+        'success': true,
+        'response': _getLocalResponse(message),
+        'agent_id': 'local_guide',
+        'mode': 'offline',
+      };
+    }
+
     try {
       final response = await http
           .post(
@@ -141,18 +298,26 @@ class ChatbotService {
               if (mode != null) 'mode': mode.name,
             }),
           )
-          .timeout(ApiConfig.timeout);
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
-      } else {
-        print('Failed to send message: ${response.statusCode}');
-        return {'success': false, 'error': 'Failed to send message'};
       }
     } catch (e) {
-      print('Error sending message: $e');
-      return {'success': false, 'error': e.toString()};
+      print('Backend error: $e');
     }
+
+    final openRouterResponse = await _callOpenRouter(message);
+    if (openRouterResponse != null) {
+      return openRouterResponse;
+    }
+
+    return {
+      'success': true,
+      'response': _getLocalResponse(message),
+      'agent_id': 'local_guide',
+      'mode': 'offline',
+    };
   }
 
   static Future<List<ChatMessage>> getHistory({

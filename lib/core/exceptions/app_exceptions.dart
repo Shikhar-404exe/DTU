@@ -1,10 +1,9 @@
-/// Enterprise-level exception handling
-/// Provides structured error types for the entire application
+
+
 library;
 
 import 'package:flutter/foundation.dart';
 
-/// Base exception for all app-specific errors
 abstract class AppException implements Exception {
   final String message;
   final String? code;
@@ -21,7 +20,6 @@ abstract class AppException implements Exception {
   @override
   String toString() => 'AppException($code): $message';
 
-  /// Log the exception for debugging
   void log() {
     debugPrint('[$runtimeType] $code: $message');
     if (originalError != null) {
@@ -33,7 +31,6 @@ abstract class AppException implements Exception {
   }
 }
 
-/// Authentication related exceptions
 class AuthException extends AppException {
   const AuthException({
     required super.message,
@@ -42,7 +39,6 @@ class AuthException extends AppException {
     super.stackTrace,
   });
 
-  // Common auth error codes
   static const String invalidEmail = 'invalid-email';
   static const String userDisabled = 'user-disabled';
   static const String userNotFound = 'user-not-found';
@@ -54,7 +50,6 @@ class AuthException extends AppException {
   static const String networkError = 'network-request-failed';
   static const String unknown = 'unknown';
 
-  /// Get user-friendly message based on error code
   String get userFriendlyMessage {
     switch (code) {
       case invalidEmail:
@@ -83,7 +78,6 @@ class AuthException extends AppException {
   }
 }
 
-/// Network related exceptions
 class NetworkException extends AppException {
   final int? statusCode;
   final bool isTimeout;
@@ -99,7 +93,6 @@ class NetworkException extends AppException {
     this.isOffline = false,
   });
 
-  /// Get user-friendly message
   String get userFriendlyMessage {
     if (isOffline) {
       return 'You appear to be offline. Please check your internet connection.';
@@ -125,7 +118,6 @@ class NetworkException extends AppException {
   }
 }
 
-/// Storage/Cache related exceptions
 class StorageException extends AppException {
   const StorageException({
     required super.message,
@@ -139,7 +131,6 @@ class StorageException extends AppException {
   }
 }
 
-/// Validation related exceptions
 class ValidationException extends AppException {
   final String? field;
 
@@ -159,7 +150,6 @@ class ValidationException extends AppException {
   }
 }
 
-/// File operation exceptions
 class FileException extends AppException {
   const FileException({
     required super.message,
@@ -173,7 +163,6 @@ class FileException extends AppException {
   }
 }
 
-/// Result wrapper for operations that can fail
 class Result<T> {
   final T? data;
   final AppException? error;
@@ -190,7 +179,6 @@ class Result<T> {
   factory Result.failure(AppException error) =>
       Result._(error: error, isSuccess: false);
 
-  /// Map the result to another type
   Result<R> map<R>(R Function(T) mapper) {
     if (isSuccess && data != null) {
       return Result.success(mapper(data as T));
@@ -198,7 +186,6 @@ class Result<T> {
     return Result.failure(error!);
   }
 
-  /// Get data or throw
   T getOrThrow() {
     if (isSuccess && data != null) {
       return data as T;
@@ -206,7 +193,6 @@ class Result<T> {
     throw error ?? const AuthException(message: 'Unknown error');
   }
 
-  /// Get data or default value
   T getOrElse(T defaultValue) {
     if (isSuccess && data != null) {
       return data as T;
@@ -214,14 +200,12 @@ class Result<T> {
     return defaultValue;
   }
 
-  /// Execute callback on success
   void onSuccess(void Function(T) callback) {
     if (isSuccess && data != null) {
       callback(data as T);
     }
   }
 
-  /// Execute callback on failure
   void onFailure(void Function(AppException) callback) {
     if (!isSuccess && error != null) {
       callback(error!);

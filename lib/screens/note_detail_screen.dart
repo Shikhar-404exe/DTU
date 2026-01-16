@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import '../widgets/read_aloud_button.dart';
 
-/// 📑 Note Detail Screen
-/// Displays details of a generated or selected note.
 class NoteDetailScreen extends StatelessWidget {
   final String title;
   final String content;
@@ -19,18 +18,26 @@ class NoteDetailScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(title),
         centerTitle: true,
-        backgroundColor: Colors.white.withAlpha(217), // ~0.85 opacity
+        backgroundColor: Colors.white.withAlpha(217),
         foregroundColor: Colors.black87,
         elevation: 1,
+        actions: [
+
+          ReadAloudButton(
+            textContent: content,
+            tooltip: 'Read Note Aloud',
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Container(
-        color: const Color(0xFFFFDAD0), // solid pastel salmon
+        color: const Color(0xFFFFDAD0),
         padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(230), // ~0.9 opacity
+              color: Colors.white.withAlpha(230),
               borderRadius: BorderRadius.circular(24),
               boxShadow: const [
                 BoxShadow(

@@ -1,5 +1,5 @@
-/// Enterprise-level App Initializer
-/// Handles all app initialization with proper error handling and crash prevention
+
+
 library;
 
 import 'dart:async';
@@ -12,8 +12,8 @@ import '../firebase_options.dart';
 import 'services/firebase_auth_service.dart';
 import 'services/connectivity_service.dart';
 import 'services/encryption_service.dart';
+import '../services/fcm_service.dart';
 
-/// App initialization status
 enum InitStatus {
   notStarted,
   inProgress,
@@ -21,7 +21,6 @@ enum InitStatus {
   failed,
 }
 
-/// Initialization result
 class InitResult {
   final InitStatus status;
   final String? errorMessage;
@@ -37,7 +36,6 @@ class InitResult {
   bool get isFailed => status == InitStatus.failed;
 }
 
-/// App Initializer - Handles all startup tasks
 class AppInitializer {
   static bool _isInitialized = false;
   static InitResult? _lastResult;
@@ -45,7 +43,6 @@ class AppInitializer {
   static bool get isInitialized => _isInitialized;
   static InitResult? get lastResult => _lastResult;
 
-  /// Initialize the app with all required services
   static Future<InitResult> initialize() async {
     if (_isInitialized) {
       return _lastResult ?? const InitResult(status: InitStatus.success);
@@ -54,10 +51,9 @@ class AppInitializer {
     final warnings = <String>[];
 
     try {
-      // Ensure Flutter bindings are initialized
+
       WidgetsFlutterBinding.ensureInitialized();
 
-      // Load environment variables (non-critical)
       try {
         await dotenv.load(fileName: ".env");
       } catch (e) {
@@ -65,7 +61,6 @@ class AppInitializer {
         debugPrint('Warning: .env file not loaded: $e');
       }
 
-      // Initialize Firebase (non-blocking)
       try {
         await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,
@@ -78,12 +73,11 @@ class AppInitializer {
         debugPrint('✓ Firebase initialized');
       } catch (e) {
         debugPrint('✗ Firebase initialization failed: $e');
-        // Don't fail entirely - app can work in offline/guest mode
+
         warnings.add('Firebase not available - using offline mode');
-        // Continue without Firebase
+
       }
 
-      // Initialize connectivity service (non-critical)
       try {
         await ConnectivityService.instance.initialize();
         debugPrint('✓ Connectivity service initialized');
@@ -92,7 +86,6 @@ class AppInitializer {
         debugPrint('Warning: Connectivity service failed: $e');
       }
 
-      // Initialize auth service (depends on Firebase)
       try {
         await FirebaseAuthService.instance.initialize();
         debugPrint('✓ Auth service initialized');
@@ -101,13 +94,21 @@ class AppInitializer {
         debugPrint('Warning: Auth service failed: $e');
       }
 
-      // Initialize encryption service (non-critical)
       try {
         await EncryptionService.instance.initialize();
         debugPrint('✓ Encryption service initialized');
       } catch (e) {
         warnings.add('Encryption service unavailable');
         debugPrint('Warning: Encryption service failed: $e');
+      }
+
+      try {
+        await FCMService().initialize();
+        debugPrint('✓ FCM service initialized');
+
+      } catch (e) {
+        warnings.add('Push notifications unavailable');
+        debugPrint('Warning: FCM service failed: $e');
       }
 
       _isInitialized = true;
@@ -136,22 +137,18 @@ class AppInitializer {
     }
   }
 
-  /// Reset initialization (useful for testing)
   static void reset() {
     _isInitialized = false;
     _lastResult = null;
   }
 }
 
-/// Global error handler for uncaught exceptions
 class GlobalErrorHandler {
   static bool _isSetup = false;
 
-  /// Setup global error handling
   static void setup() {
     if (_isSetup) return;
 
-    // Handle Flutter framework errors
     FlutterError.onError = (FlutterErrorDetails details) {
       debugPrint('═══════════════════════════════════════');
       debugPrint('  FLUTTER ERROR');
@@ -163,15 +160,12 @@ class GlobalErrorHandler {
       }
       debugPrint('Stack trace:\n${details.stack}');
 
-      // In release mode, you might want to send this to a crash reporting service
       if (kReleaseMode) {
-        // Log to console in release mode - Firebase Crashlytics would be configured here
-        // if using: FirebaseCrashlytics.instance.recordFlutterError(details);
+
         debugPrint('Release mode error logged for crash reporting');
       }
     };
 
-    // Handle errors outside of Flutter (isolate errors)
     PlatformDispatcher.instance.onError = (error, stack) {
       debugPrint('═══════════════════════════════════════');
       debugPrint('  PLATFORM ERROR');
@@ -179,7 +173,6 @@ class GlobalErrorHandler {
       debugPrint('Error: $error');
       debugPrint('Stack trace:\n$stack');
 
-      // Return true to prevent the error from propagating
       return true;
     };
 
@@ -188,7 +181,6 @@ class GlobalErrorHandler {
   }
 }
 
-/// Error boundary widget - catches errors in widget tree
 class ErrorBoundary extends StatefulWidget {
   final Widget child;
   final Widget Function(FlutterErrorDetails)? errorBuilder;
@@ -211,7 +203,6 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
     super.initState();
   }
 
-  /// Handle error from child widgets
   void handleError(FlutterErrorDetails details) {
     debugPrint('ErrorBoundary caught error: ${details.exception}');
     setState(() {

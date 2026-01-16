@@ -1,19 +1,17 @@
-/// Enterprise-level Connectivity Service
-/// Monitors network connectivity and provides offline/online awareness
+
+
 library;
 
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 
-/// Connectivity state
 enum ConnectivityState {
   online,
   offline,
   unknown,
 }
 
-/// Network type
 enum NetworkType {
   wifi,
   mobile,
@@ -24,7 +22,6 @@ enum NetworkType {
   none,
 }
 
-/// Connectivity Service - Singleton
 class ConnectivityService {
   static ConnectivityService? _instance;
   static ConnectivityService get instance {
@@ -36,15 +33,12 @@ class ConnectivityService {
 
   final Connectivity _connectivity = Connectivity();
 
-  // Stream controllers
   final _stateController = StreamController<ConnectivityState>.broadcast();
   final _typeController = StreamController<NetworkType>.broadcast();
 
-  // Streams
   Stream<ConnectivityState> get stateStream => _stateController.stream;
   Stream<NetworkType> get typeStream => _typeController.stream;
 
-  // Current state
   ConnectivityState _currentState = ConnectivityState.unknown;
   NetworkType _currentType = NetworkType.none;
 
@@ -55,14 +49,12 @@ class ConnectivityService {
 
   StreamSubscription<List<ConnectivityResult>>? _subscription;
 
-  /// Initialize the connectivity service
   Future<void> initialize() async {
     try {
-      // Get initial state
+
       final results = await _connectivity.checkConnectivity();
       _updateState(results);
 
-      // Listen for changes
       _subscription = _connectivity.onConnectivityChanged.listen(
         _updateState,
         onError: (error) {
@@ -78,14 +70,13 @@ class ConnectivityService {
   }
 
   void _updateState(List<ConnectivityResult> results) {
-    // Determine if online (any connection available)
+
     final hasConnection = results.isNotEmpty &&
         !results.every((r) => r == ConnectivityResult.none);
 
     final newState =
         hasConnection ? ConnectivityState.online : ConnectivityState.offline;
 
-    // Determine primary network type
     NetworkType newType = NetworkType.none;
     for (final result in results) {
       switch (result) {
@@ -108,16 +99,15 @@ class ConnectivityService {
           newType = NetworkType.other;
           break;
         case ConnectivityResult.none:
-          // Keep checking others
+
           break;
       }
-      // Prefer wifi/mobile over other types
+
       if (newType == NetworkType.wifi || newType == NetworkType.mobile) {
         break;
       }
     }
 
-    // Update and notify if changed
     if (newState != _currentState) {
       _currentState = newState;
       _stateController.add(_currentState);
@@ -130,7 +120,6 @@ class ConnectivityService {
     }
   }
 
-  /// Check current connectivity (forces a fresh check)
   Future<bool> checkConnectivity() async {
     try {
       final results = await _connectivity.checkConnectivity();
@@ -142,7 +131,6 @@ class ConnectivityService {
     }
   }
 
-  /// Execute callback only when online
   Future<T?> whenOnline<T>(
     Future<T> Function() callback, {
     T? fallback,
@@ -156,7 +144,6 @@ class ConnectivityService {
     }
   }
 
-  /// Dispose resources
   void dispose() {
     _subscription?.cancel();
     _stateController.close();

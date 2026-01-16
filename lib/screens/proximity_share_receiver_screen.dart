@@ -1,5 +1,5 @@
-/// Proximity Share Receiver Screen (Student Mode)
-/// Students discover and receive notes from teachers via Bluetooth/WiFi
+
+
 library;
 
 import 'package:flutter/material.dart';
@@ -22,7 +22,7 @@ class _ProximityShareReceiverScreenState
 
   ProximityShareState _state = ProximityShareState.idle;
   List<ProximityDevice> _availableDevices = [];
-  List<Note> _receivedNotes = [];
+  final List<Note> _receivedNotes = [];
   String? _errorMessage;
   bool _isInitialized = false;
 
@@ -129,7 +129,7 @@ class _ProximityShareReceiverScreenState
           label: 'View',
           textColor: Colors.white,
           onPressed: () {
-            // TODO: Navigate to note detail screen
+
           },
         ),
       ),
@@ -186,31 +186,26 @@ class _ProximityShareReceiverScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Status card
+
           _buildStatusCard(),
           const SizedBox(height: 20),
 
-          // Instructions
           if (_state == ProximityShareState.idle ||
               _state == ProximityShareState.ready)
             _buildInstructions(),
 
-          // Available devices
           if (_state == ProximityShareState.discovering) ...[
             _buildAvailableDevices(),
             const SizedBox(height: 20),
           ],
 
-          // Received notes
           if (_receivedNotes.isNotEmpty) ...[
             _buildReceivedNotes(),
             const SizedBox(height: 20),
           ],
 
-          // Action button
           _buildActionButton(),
 
-          // Statistics
           const SizedBox(height: 20),
           _buildStatistics(),
         ],
@@ -518,7 +513,7 @@ class _ProximityShareReceiverScreenState
                     ],
                   ),
                   onTap: () {
-                    // TODO: Navigate to note detail
+
                     _showNoteDetails(note);
                   },
                 )),
@@ -527,7 +522,7 @@ class _ProximityShareReceiverScreenState
               Center(
                 child: TextButton(
                   onPressed: () {
-                    // TODO: Show all notes
+
                   },
                   child: Text('View all ${_receivedNotes.length} notes'),
                 ),
@@ -593,7 +588,7 @@ class _ProximityShareReceiverScreenState
           ),
           ElevatedButton(
             onPressed: () {
-              // TODO: Save note locally
+
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(

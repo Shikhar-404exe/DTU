@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Centralized error handling utility
 class ErrorHandler {
   static void logError(String context, dynamic error,
       [StackTrace? stackTrace]) {
@@ -104,7 +103,6 @@ class ErrorHandler {
   }
 }
 
-/// Error boundary widget
 class ErrorBoundary extends StatefulWidget {
   final Widget child;
   final Widget Function(Object error)? errorBuilder;

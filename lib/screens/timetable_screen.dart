@@ -58,7 +58,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
           const SizedBox(height: 6),
           _dayChips(isDark),
 
-          // Add button moved below the days bar
           _addButton(isDark),
 
           Expanded(
@@ -79,7 +78,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
     );
   }
 
-  //------------------- DAY CHIPS ---------------------
   Widget _dayChips(bool isDark) {
     return SizedBox(
       height: 60,
@@ -96,18 +94,18 @@ class _TimetableScreenState extends State<TimetableScreen> {
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               decoration: BoxDecoration(
-                // Selected: filled with pastel lavender, Unselected: outlined
+
                 color: sel
                     ? (isDark
                         ? AppColors.mauveDark
-                        : const Color(0xFFE8D4F0)) // pastel lavender
+                        : const Color(0xFFE8D4F0))
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: sel
                       ? (isDark
                           ? AppColors.mauveDark
-                          : const Color(0xFFD4A5E0)) // lavender border
+                          : const Color(0xFFD4A5E0))
                       : (isDark
                           ? AppColors.textLightDark.withAlpha(102)
                           : AppColors.salmon.withAlpha(128)),
@@ -134,7 +132,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                         ? (isDark
                             ? Colors.white
                             : const Color(
-                                0xFF6B3A7D)) // dark purple text when selected
+                                0xFF6B3A7D))
                         : (isDark ? AppColors.textLightDark : Colors.black54),
                     fontWeight: sel ? FontWeight.bold : FontWeight.w500,
                     fontSize: 14,
@@ -150,7 +148,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
     );
   }
 
-  //------------------- CLASS LIST ---------------------
   Widget _list(List<TimetableEntry> list, bool isDark) {
     return ListView.builder(
       padding: const EdgeInsets.all(10),
@@ -234,7 +231,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
     );
   }
 
-  //------------------- ADD BUTTON ---------------------
   Widget _addButton(bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -263,7 +259,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
     );
   }
 
-  //------------------- ADD / EDIT POPUP ---------------------
   void _edit([TimetableEntry? entry]) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final subject = TextEditingController(text: entry?.subject ?? "");
@@ -414,7 +409,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
     );
   }
 
-  //------------------- DELETE ---------------------
   void _delete(TimetableEntry e) {
     setState(() => _entries.removeWhere((x) => x.id == e.id));
     _persist();

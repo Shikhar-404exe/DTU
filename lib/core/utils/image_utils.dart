@@ -1,5 +1,5 @@
-/// Enterprise-level Asset & Image Utilities
-/// Handles image loading, caching, and error handling across all platforms
+
+
 library;
 
 import 'dart:io';
@@ -7,33 +7,26 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-/// Asset path constants
 class AssetPaths {
   AssetPaths._();
 
-  // Base paths
   static const String _assetsBase = 'assets';
   static const String _imagesBase = '$_assetsBase/images';
   static const String iconsBase = '$_assetsBase/icons';
   static const String _langBase = '$_assetsBase/lang';
 
-  // App logos
   static const String logo = '$_imagesBase/logo1.png';
   static const String logoLight = '$_imagesBase/logo_light.png';
   static const String logoDark = '$_imagesBase/logo_dark.png';
 
-  // Social/Auth logos
   static const String googleLogo = '$_imagesBase/google_logo.png';
 
-  // Placeholders
   static const String placeholderUser = '$_imagesBase/placeholder_user.png';
   static const String placeholderImage = '$_imagesBase/placeholder.png';
 
-  // Language files
   static String langFile(String code) => '$_langBase/$code.json';
 }
 
-/// Image loading widget with error handling and placeholder support
 class SafeImage extends StatelessWidget {
   final String? imagePath;
   final double? width;
@@ -56,7 +49,6 @@ class SafeImage extends StatelessWidget {
     this.backgroundColor,
   });
 
-  /// Create from network URL
   const SafeImage.network({
     super.key,
     required String url,
@@ -69,7 +61,6 @@ class SafeImage extends StatelessWidget {
     this.backgroundColor,
   }) : imagePath = url;
 
-  /// Create from asset path
   const SafeImage.asset({
     super.key,
     required String assetPath,
@@ -82,7 +73,6 @@ class SafeImage extends StatelessWidget {
     this.backgroundColor,
   }) : imagePath = assetPath;
 
-  /// Create from file path
   const SafeImage.file({
     super.key,
     required String filePath,
@@ -109,7 +99,6 @@ class SafeImage extends StatelessWidget {
       imageWidget = _buildFileImage();
     }
 
-    // Apply border radius if specified
     if (borderRadius != null) {
       imageWidget = ClipRRect(
         borderRadius: borderRadius!,
@@ -165,7 +154,7 @@ class SafeImage extends StatelessWidget {
   }
 
   Widget _buildFileImage() {
-    // On web, file images need special handling
+
     if (kIsWeb) {
       return _buildErrorWidget();
     }
@@ -236,7 +225,6 @@ class SafeImage extends StatelessWidget {
   }
 }
 
-/// User avatar widget with fallback to initials
 class UserAvatar extends StatelessWidget {
   final String? imageUrl;
   final String? filePath;
@@ -267,7 +255,6 @@ class UserAvatar extends StatelessWidget {
 
     Widget avatar;
 
-    // Try to load image
     if (imageUrl != null && imageUrl!.isNotEmpty) {
       avatar = _buildImageAvatar(imageUrl!, isNetwork: true);
     } else if (filePath != null && filePath!.isNotEmpty) {
@@ -276,7 +263,6 @@ class UserAvatar extends StatelessWidget {
       avatar = _buildInitialsAvatar(bgColor, fgColor);
     }
 
-    // Add edit badge if needed
     if (showEditBadge) {
       avatar = Stack(
         children: [
@@ -302,7 +288,6 @@ class UserAvatar extends StatelessWidget {
       );
     }
 
-    // Make tappable if callback provided
     if (onTap != null) {
       avatar = GestureDetector(
         onTap: onTap,
@@ -382,30 +367,31 @@ class UserAvatar extends StatelessWidget {
     if (words.isEmpty) return '';
 
     if (words.length == 1) {
-      return words[0].substring(0, 1).toUpperCase();
+
+      return words[0].isEmpty ? '' : words[0].substring(0, 1).toUpperCase();
+    }
+
+    if (words[0].isEmpty || words[1].isEmpty) {
+      return words[0].isEmpty ? '' : words[0].substring(0, 1).toUpperCase();
     }
 
     return '${words[0][0]}${words[1][0]}'.toUpperCase();
   }
 }
 
-/// Platform-aware image picker helper
 class ImagePickerHelper {
   ImagePickerHelper._();
 
-  /// Check if image picking is supported on current platform
   static bool get isSupported {
     if (kIsWeb) return true;
     return Platform.isAndroid || Platform.isIOS;
   }
 
-  /// Check if camera is available
   static bool get isCameraAvailable {
-    if (kIsWeb) return true; // Web can access camera through browser API
+    if (kIsWeb) return true;
     return Platform.isAndroid || Platform.isIOS;
   }
 
-  /// Get platform-specific image source options
   static List<ImageSourceOption> getAvailableOptions() {
     final options = <ImageSourceOption>[];
 
@@ -418,7 +404,6 @@ class ImagePickerHelper {
   }
 }
 
-/// Image source options
 enum ImageSourceOption {
   camera,
   gallery,
@@ -444,11 +429,9 @@ extension ImageSourceOptionExtension on ImageSourceOption {
   }
 }
 
-/// Static utility class for common image operations
 class ImageUtils {
   ImageUtils._();
 
-  /// Build a profile image with cross-platform support
   static Widget buildProfileImage({
     String? imagePath,
     String? imageUrl,
@@ -460,14 +443,13 @@ class ImageUtils {
   }) {
     ImageProvider? imageProvider;
 
-    // Determine the image provider based on the path/url
     if (imageUrl != null && imageUrl.isNotEmpty) {
       imageProvider = NetworkImage(imageUrl);
     } else if (imagePath != null && imagePath.isNotEmpty) {
       if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
         imageProvider = NetworkImage(imagePath);
       } else if (!kIsWeb) {
-        // Only use FileImage on non-web platforms
+
         final file = File(imagePath);
         if (file.existsSync()) {
           imageProvider = FileImage(file);
@@ -526,19 +508,15 @@ class ImageUtils {
     return avatar;
   }
 
-  /// Check if an image path is valid and accessible
   static bool isValidImagePath(String? path) {
     if (path == null || path.isEmpty) return false;
 
-    // Network URLs are always potentially valid
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return true;
     }
 
-    // On web, local files are not directly accessible
     if (kIsWeb) return false;
 
-    // Check if file exists
     try {
       return File(path).existsSync();
     } catch (e) {
@@ -546,7 +524,6 @@ class ImageUtils {
     }
   }
 
-  /// Get image provider from path with error handling
   static ImageProvider? getImageProvider(String? path) {
     if (path == null || path.isEmpty) return null;
 

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Include shared preferences -->
+    <include domain="sharedpref" path="."/>
+    
+    <!-- Include app databases -->
+    <include domain="database" path="."/>
+    
+    <!-- Exclude sensitive files -->
+    <exclude domain="sharedpref" path="flutter.secure_storage.xml"/>
+</full-backup-content>

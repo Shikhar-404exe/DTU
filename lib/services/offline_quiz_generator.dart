@@ -1,11 +1,10 @@
-/// Offline Quiz Generator from Note Metadata
-/// Generates quizzes without internet using pre-cached quiz metadata
+
+
 library;
 
 import 'dart:math';
 import '../models/note.dart';
 
-/// Quiz question for display
 class QuizQuestion {
   final String question;
   final List<String> options;
@@ -24,12 +23,11 @@ class QuizQuestion {
   });
 }
 
-/// Quiz result
 class QuizResult {
   final int totalQuestions;
   final int correctAnswers;
   final int score;
-  final Map<int, bool> answers; // Question index -> correct/incorrect
+  final Map<int, bool> answers;
   final Duration timeTaken;
 
   QuizResult({
@@ -51,18 +49,16 @@ class QuizResult {
   }
 }
 
-/// Offline Quiz Generator Service
 class OfflineQuizService {
   static final Random _random = Random();
 
-  /// Generate quiz from note metadata (works 100% offline)
   static List<QuizQuestion> generateQuizFromNote({
     required Note note,
     int questionCount = 10,
-    List<String>? questionTypes, // mcq, true_false, short_answer
+    List<String>? questionTypes,
     String? difficulty,
   }) {
-    // Check if note has quiz metadata
+
     if (note.quizMetadata == null) {
       throw Exception(
           'Note does not have quiz metadata. Generate questions online first.');
@@ -75,7 +71,6 @@ class OfflineQuizService {
       throw Exception('No question templates available in metadata.');
     }
 
-    // Filter by question types if specified
     List<QuizQuestionTemplate> filteredTemplates = templates;
     if (questionTypes != null && questionTypes.isNotEmpty) {
       filteredTemplates =
@@ -83,17 +78,15 @@ class OfflineQuizService {
     }
 
     if (filteredTemplates.isEmpty) {
-      filteredTemplates = templates; // Fallback to all templates
+      filteredTemplates = templates;
     }
 
-    // Select random questions (or all if fewer than requested)
     final selectedCount = min(questionCount, filteredTemplates.length);
     final selectedTemplates = _selectRandomQuestions(
       filteredTemplates,
       selectedCount,
     );
 
-    // Convert templates to quiz questions
     return selectedTemplates.map((template) {
       return QuizQuestion(
         question: template.question,
@@ -106,7 +99,6 @@ class OfflineQuizService {
     }).toList();
   }
 
-  /// Generate quiz from multiple notes
   static List<QuizQuestion> generateQuizFromMultipleNotes({
     required List<Note> notes,
     int questionsPerNote = 3,
@@ -125,7 +117,7 @@ class OfflineQuizService {
         );
         allQuestions.addAll(questions);
       } catch (e) {
-        // Skip notes that can't generate questions
+
         continue;
       }
     }
@@ -135,30 +127,25 @@ class OfflineQuizService {
           'No questions could be generated from the provided notes.');
     }
 
-    // Shuffle all questions
     allQuestions.shuffle(_random);
     return allQuestions;
   }
 
-  /// Get key concepts from note (for study guide)
   static List<String> getKeyConceptsFromNote(Note note) {
     if (note.quizMetadata == null) return [];
     return note.quizMetadata!.keyPoints;
   }
 
-  /// Get important keywords from note (for flashcards)
   static List<String> getKeywordsFromNote(Note note) {
     if (note.quizMetadata == null) return [];
     return note.quizMetadata!.keywords;
   }
 
-  /// Check if note supports offline quiz generation
   static bool canGenerateQuiz(Note note) {
     return note.quizMetadata != null &&
         note.quizMetadata!.questionTemplates.isNotEmpty;
   }
 
-  /// Get quiz statistics from note metadata
   static Map<String, dynamic> getQuizStats(Note note) {
     if (note.quizMetadata == null) {
       return {
@@ -170,7 +157,6 @@ class OfflineQuizService {
     final metadata = note.quizMetadata!;
     final templates = metadata.questionTemplates;
 
-    // Count question types
     final typeCounts = <String, int>{};
     for (final template in templates) {
       typeCounts[template.type] = (typeCounts[template.type] ?? 0) + 1;
@@ -188,7 +174,6 @@ class OfflineQuizService {
     };
   }
 
-  /// Generate practice quiz (mixed difficulty)
   static List<QuizQuestion> generatePracticeQuiz({
     required Note note,
     int easyCount = 3,
@@ -212,14 +197,11 @@ class OfflineQuizService {
             ))
         .toList();
 
-    // If fewer questions than requested, return all
     if (allQuestions.length <= (easyCount + mediumCount + hardCount)) {
       allQuestions.shuffle(_random);
       return allQuestions;
     }
 
-    // Select mixed difficulty (this is simplified - in real implementation
-    // you'd categorize by actual difficulty)
     final selected = _selectRandomQuestions(
       templates,
       easyCount + mediumCount + hardCount,
@@ -237,16 +219,14 @@ class OfflineQuizService {
         .toList();
   }
 
-  /// Generate quick quiz (5 questions, fast review)
   static List<QuizQuestion> generateQuickQuiz(Note note) {
     return generateQuizFromNote(
       note: note,
       questionCount: 5,
-      questionTypes: ['mcq', 'true_false'], // Quick question types
+      questionTypes: ['mcq', 'true_false'],
     );
   }
 
-  /// Calculate quiz result
   static QuizResult calculateResult({
     required List<QuizQuestion> questions,
     required Map<int, String> userAnswers,
@@ -285,8 +265,6 @@ class OfflineQuizService {
     );
   }
 
-  // Private helper methods
-
   static List<QuizQuestionTemplate> _selectRandomQuestions(
     List<QuizQuestionTemplate> templates,
     int count,
@@ -321,16 +299,14 @@ class OfflineQuizService {
     }
   }
 
-  /// Generate flashcards from note metadata
   static List<Map<String, String>> generateFlashcards(Note note) {
     if (note.quizMetadata == null) return [];
 
     final flashcards = <Map<String, String>>[];
     final metadata = note.quizMetadata!;
 
-    // Create flashcards from keywords
     for (final keyword in metadata.keywords) {
-      // Find context from key points
+
       String? definition;
       for (final point in metadata.keyPoints) {
         if (point.toLowerCase().contains(keyword.toLowerCase())) {

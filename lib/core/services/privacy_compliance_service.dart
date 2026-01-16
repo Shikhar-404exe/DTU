@@ -1,6 +1,5 @@
-/// Privacy & Compliance Service
-/// GDPR (EU), IT Act 2000 (India), DPDP Act 2023 (India) Compliant
-/// Handles user consent, data rights, and privacy management
+
+
 library;
 
 import 'dart:convert';
@@ -8,8 +7,6 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Privacy Compliance Service
-/// Implements data protection requirements for Indian and international regulations
 class PrivacyComplianceService {
   static PrivacyComplianceService? _instance;
   static PrivacyComplianceService get instance =>
@@ -17,7 +14,6 @@ class PrivacyComplianceService {
 
   PrivacyComplianceService._();
 
-  // Storage keys
   static const String _consentKey = 'user_privacy_consent';
   static const String _consentTimestampKey = 'consent_timestamp';
   static const String _consentVersionKey = 'consent_version';
@@ -29,31 +25,26 @@ class PrivacyComplianceService {
   static const String _ageVerifiedKey = 'age_verified';
   static const String _parentalConsentKey = 'parental_consent';
 
-  // Current privacy policy version (increment when policy changes)
   static const String currentPolicyVersion = '1.0.0';
   static const String policyLastUpdated = '2025-01-01';
 
-  /// Check if user has given valid consent
   Future<bool> hasValidConsent() async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // Check if consent exists
       final hasConsent = prefs.getBool(_consentKey) ?? false;
       if (!hasConsent) return false;
 
-      // Check if consent is for current policy version
       final consentVersion = prefs.getString(_consentVersionKey);
       if (consentVersion != currentPolicyVersion) return false;
 
-      // Check if consent is still valid (within 12 months for GDPR)
       final timestampStr = prefs.getString(_consentTimestampKey);
       if (timestampStr != null) {
         final consentDate = DateTime.parse(timestampStr);
         final monthsSinceConsent =
             DateTime.now().difference(consentDate).inDays ~/ 30;
         if (monthsSinceConsent >= 12) {
-          return false; // Consent expired, need to re-consent
+          return false;
         }
       }
 
@@ -64,7 +55,6 @@ class PrivacyComplianceService {
     }
   }
 
-  /// Record user consent
   Future<void> recordConsent({
     required bool dataProcessing,
     required bool analytics,
@@ -95,7 +85,6 @@ class PrivacyComplianceService {
     }
   }
 
-  /// Get current consent status
   Future<ConsentStatus> getConsentStatus() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -119,7 +108,6 @@ class PrivacyComplianceService {
     }
   }
 
-  /// Verify user age (required for minors under DPDP Act)
   Future<void> verifyAge({
     required int age,
     required bool hasParentalConsent,
@@ -129,7 +117,6 @@ class PrivacyComplianceService {
 
       await prefs.setBool(_ageVerifiedKey, true);
 
-      // Under 18 requires parental consent in India (DPDP Act)
       if (age < 18) {
         await prefs.setBool(_parentalConsentKey, hasParentalConsent);
       }
@@ -140,7 +127,6 @@ class PrivacyComplianceService {
     }
   }
 
-  /// Withdraw consent (GDPR Article 7)
   Future<void> withdrawConsent({
     bool dataProcessing = false,
     bool analytics = false,
@@ -170,7 +156,6 @@ class PrivacyComplianceService {
     }
   }
 
-  /// Export user data (GDPR Article 20 - Right to Data Portability)
   Future<Map<String, dynamic>> exportUserData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -185,9 +170,8 @@ class PrivacyComplianceService {
         'preferences': {},
       };
 
-      // Collect all user data
       for (final key in keys) {
-        // Skip sensitive internal keys
+
         if (key.startsWith('flutter.') || key.contains('encryption')) {
           continue;
         }
@@ -210,12 +194,10 @@ class PrivacyComplianceService {
     }
   }
 
-  /// Delete all user data (GDPR Article 17 - Right to be Forgotten)
   Future<bool> deleteAllUserData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // Clear all preferences
       await prefs.clear();
 
       debugPrint('✓ All user data deleted (Right to be Forgotten)');
@@ -226,7 +208,6 @@ class PrivacyComplianceService {
     }
   }
 
-  /// Rectify user data (GDPR Article 16 - Right to Rectification)
   Future<bool> rectifyUserData(String key, dynamic newValue) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -249,7 +230,6 @@ class PrivacyComplianceService {
     }
   }
 
-  /// Log data access (for audit trail)
   Future<void> logDataAccess({
     required String dataType,
     required String purpose,
@@ -269,7 +249,6 @@ class PrivacyComplianceService {
 
       accessLog.add(logEntry);
 
-      // Keep only last 100 entries
       if (accessLog.length > 100) {
         accessLog.removeRange(0, accessLog.length - 100);
       }
@@ -280,7 +259,6 @@ class PrivacyComplianceService {
     }
   }
 
-  /// Get data access log
   Future<List<Map<String, dynamic>>> getDataAccessLog() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -295,38 +273,32 @@ class PrivacyComplianceService {
     }
   }
 
-  /// Check if analytics can be used
   Future<bool> canUseAnalytics() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_analyticsKey) ?? false;
   }
 
-  /// Check if marketing communications allowed
   Future<bool> canSendMarketing() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_marketingKey) ?? false;
   }
 
-  /// Check if third-party sharing allowed
   Future<bool> canShareWithThirdParty() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_thirdPartyKey) ?? false;
   }
 
-  /// Check if data retention policy has been acknowledged
   Future<bool> hasAcknowledgedDataRetention() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_dataRetentionKey) ?? false;
   }
 
-  /// Acknowledge data retention policy
   Future<void> acknowledgeDataRetention() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_dataRetentionKey, true);
   }
 }
 
-/// Consent status model
 class ConsentStatus {
   final bool hasConsent;
   final bool dataProcessing;
@@ -370,9 +342,8 @@ class ConsentStatus {
   }
 }
 
-/// Privacy rights available to users
 class PrivacyRights {
-  /// GDPR/DPDP Rights summary
+
   static const List<PrivacyRight> userRights = [
     PrivacyRight(
       id: 'access',
@@ -419,7 +390,6 @@ class PrivacyRights {
   ];
 }
 
-/// Individual privacy right
 class PrivacyRight {
   final String id;
   final String title;
@@ -434,7 +404,6 @@ class PrivacyRight {
   });
 }
 
-/// Data categories collected
 class DataCategories {
   static const List<DataCategory> categories = [
     DataCategory(
@@ -468,7 +437,6 @@ class DataCategories {
   ];
 }
 
-/// Data category model
 class DataCategory {
   final String name;
   final String description;
