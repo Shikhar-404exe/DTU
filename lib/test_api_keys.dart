@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 const String openRouterApiKey =
-    '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';
+    '';
 const String openRouterBaseUrl = 'https://openrouter.ai/api/v1';
 const String openRouterModel = 'xiaomi/mimo-v2-flash:free';
 
