@@ -47,9 +47,9 @@ class AppConstants {
   static const bool enableCrashReporting = true;
 
   static const String openRouterApiKey =
-      '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';
+      '';
   static const String openRouterModel = 'xiaomi/mimo-v2-flash:free';
   static const String openRouterBaseUrl = 'https://openrouter.ai/api/v1';
 
-  static const String youtubeApiKey = 'AIzaSyCN9uZH6-Go2C8H14htrrSS15KrY_M9_-k';
+  static const String youtubeApiKey = '';
 }
