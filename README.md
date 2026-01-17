@@ -21,7 +21,7 @@ Conversational intelligence is powered through OpenRouter Chat API.
 Device-level media access enables "Photomath-style problem capture" and "document scanning".
 A custom backend handles note generation and system health checks, secured with Firebase Authentication
 
-All learning tools—note generation, scan-to-PDF, QR sharing, timetable management, and e-book access—are custom-built, not plug-ins, ensuring tight integration with the AI layer.
+All learning tools—note generation, scan-to-PDF, QR sharing, not plug-ins, ensuring tight integration with the AI layer.
 
 Offline-First Execution:-
 
